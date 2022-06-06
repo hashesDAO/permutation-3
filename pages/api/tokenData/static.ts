@@ -9,22 +9,23 @@ import {
   HASHES_ADDRESS
 } from '../../../util';
 
+type BinaryAttribute = { trait_type: string, value: number };
+
 type ResponseData = {
   hash: string
-  binaryAttributes: { [key: string]: number }
+  binary_attributes: BinaryAttribute[]
+  type: string
+  phrase: string
 }
 
 function getHashesContract(chain_id: number | undefined) {
-  // Use chain id from by query param, but fallback to environment variable or mainnet
-  // const chainId =
-  //     chain_id && INFURA_PREFIXES[chain_id] && HASHES_ADDRESS[chain_id] ? chain_id : process.env.API_CHAIN_ID || 1;
   const chainId = 1; //temp
-  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId], process.env.API_INFURA_PROJECT_ID);
+  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const newContract =  new ethers.Contract(HASHES_ADDRESS[chainId], HASHES_ABI.abi, provider);
   return newContract;
 }
 
-function getHashBinaryAttributes(hash: string) {
+function getHashBinaryAttributes(hash: string): BinaryAttribute[] {
   function getAttrValue(attr: Attribute, hash: string) {
     if (attr.regex) {
       const hex2binVal = hex2bin(hash).match(attr.regex);
@@ -37,38 +38,45 @@ function getHashBinaryAttributes(hash: string) {
     return null;
   }
 
-  const binaryAttributes: { [key: string]: number } = {};
-
-  HASH_ATTRIBUTES.map((attribute) => {
-    binaryAttributes[attribute.descriptionShort] = getAttrValue(attribute, hash);
-  });
-
-  return binaryAttributes;
+  return HASH_ATTRIBUTES.map((attribute) => ({
+    trait_type: attribute.descriptionShort,
+    value: getAttrValue(attribute, hash)
+  }));
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData | string>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData | string>) {
   const { tokenId } = req.query;
 
   if (isNaN(Number(tokenId))) {
-      res.status(400).send('tokenId must be a number');
-      return;
+    res.status(400).send('tokenId must be a number');
+    return;
   }
 
   const hashesContract = getHashesContract(1);
 
-  const hash = await hashesContract.getHash(tokenId);
+  //TODO: wrap in try/catch
+  const [hash, isDeactivated]: [string, boolean] = await Promise.all([
+    hashesContract.getHash(tokenId),
+    hashesContract.deactivated(tokenId),
+  ]);
 
   if (hash === ethers.constants.HashZero) {
-      res.status(404).send('token not found');
-      return;
+    res.status(404).send('token not found');
+    return;
   }
 
+  //TODO: temp solution for now
+  const generatedFilter = hashesContract.filters.Generated()
+  const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter)
+  const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+  const phrase = tokenIdEvent?.args?.phrase  || 'Phrase is being non-fungibilitized... check back soon!';
+
   const binaryAttributes = getHashBinaryAttributes(hash);
+
   res.status(200).json({
     hash,
-    binaryAttributes
-  })
+    binary_attributes: binaryAttributes,
+    type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
+    phrase,
+  });
 }
