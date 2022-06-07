@@ -24,30 +24,12 @@ export const HASH_ATTRIBUTES: Attribute[] = [
     {
         descriptionShort: "Longest Streak of 0's",
         description: "Length of the the longest streak of 0's in the binary number representation.",
-        regex: /(0+)(?!.*\1)/,
-        highlightFunction: (binaryString) => {
-            const match = binaryString.match(/(0+)(?!.*\1)/);
-            return [
-                {
-                    start: match ? match.index : 0,
-                    end: match ? match.index + match[0].length : 0,
-                },
-            ];
-        },
+        regex: /(0+)(?!.*\1)/
     },
     {
         descriptionShort: "Longest Streak of 1's",
         description: "Length of the the longest streak of 1's in the binary number representation.",
-        regex: /(1+)(?!.*\1)/,
-        highlightFunction: (binaryString) => {
-            const match = binaryString.match(/(1+)(?!.*\1)/);
-            return [
-                {
-                    start: match ? match.index : 0,
-                    end: match ? match.index + match[0].length : 0,
-                },
-            ];
-        },
+        regex: /(1+)(?!.*\1)/
     },
     {
         name: "MaxDriftFromCenter",
