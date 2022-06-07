@@ -64,7 +64,6 @@ export default async function handler(
 
   const hashesContract = getHashesContract(1);
 
-  //TODO: wrap in try/catch
   const [hash, isDeactivated]: [string, boolean] = await Promise.all([
     hashesContract.getHash(tokenId),
     hashesContract.deactivated(tokenId),
