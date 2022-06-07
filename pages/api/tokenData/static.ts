@@ -1,12 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers } from 'ethers';
-import HASHES_ABI from '../../../util/Hashes.json';
 import { HASH_ATTRIBUTES } from '../../../util/hash_attributes';
 import {
   hex2bin,
-  ChainId,
-  INFURA_PREFIXES,
-  HASHES_ADDRESS
+  getHashesContract
 } from '../../../util';
 
 type BinaryAttribute = { trait_type: string, value: number };
@@ -19,13 +16,6 @@ type ResponseData = {
   phrase_value: string
   phrase_attributes: BinaryAttribute[]
 };
-
-function getHashesContract(chain_id: number | undefined): ethers.Contract {
-  const chainId = 1; //temp
-  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
-  const newContract =  new ethers.Contract(HASHES_ADDRESS[chainId], HASHES_ABI.abi, provider);
-  return newContract;
-}
 
 function getHashBinaryAttributes(hash: string): BinaryAttribute[] {
   function getAttrValue(attr: Attribute, hash: string) {
