@@ -16,9 +16,10 @@ type ResponseData = {
   binary_attributes: BinaryAttribute[]
   type: string
   phrase: string
-}
+  phrase_rarity: number
+};
 
-function getHashesContract(chain_id: number | undefined) {
+function getHashesContract(chain_id: number | undefined): ethers.Contract {
   const chainId = 1; //temp
   const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const newContract =  new ethers.Contract(HASHES_ADDRESS[chainId], HASHES_ABI.abi, provider);
@@ -44,7 +45,16 @@ function getHashBinaryAttributes(hash: string): BinaryAttribute[] {
   }));
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData | string>) {
+function getPhraseRarity(str: string, arr: ethers.Event[]): number {
+  const allPhrases = arr.map(event => event?.args?.phrase);
+  const phraseAmount = allPhrases.filter((phrase: string) => phrase === str).length;
+  return phraseAmount / allPhrases.length * 100;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ResponseData | string>
+) {
   const { tokenId } = req.query;
 
   if (isNaN(Number(tokenId))) {
@@ -65,11 +75,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     return;
   }
 
-  //TODO: temp solution for now
-  const generatedFilter = hashesContract.filters.Generated()
-  const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter)
+  //TODO: temp phrase solution for now
+  const generatedFilter = hashesContract.filters.Generated();
+  const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
   const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
-  const phrase = tokenIdEvent?.args?.phrase  || 'Phrase is being non-fungibilitized... check back soon!';
+
+  const phrase = tokenIdEvent?.args?.phrase;
+  const phraseRarity = phrase ? getPhraseRarity(phrase, AllGeneratedEvents) : 0;
 
   const binaryAttributes = getHashBinaryAttributes(hash);
 
@@ -77,6 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     hash,
     binary_attributes: binaryAttributes,
     type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
-    phrase,
+    phrase: phrase || 'Phrase is being non-fungibilitized... check back soon!',
+    phrase_rarity: phraseRarity
   });
 }
