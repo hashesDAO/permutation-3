@@ -13,10 +13,11 @@ type BinaryAttribute = { trait_type: string, value: number };
 
 type ResponseData = {
   hash: string
+  binary_value: string
   binary_attributes: BinaryAttribute[]
   type: string
-  phrase: string
-  phrase_rarity: number
+  phrase_value: string
+  phrase_attributes: BinaryAttribute[]
 };
 
 function getHashesContract(chain_id: number | undefined): ethers.Contract {
@@ -51,6 +52,28 @@ function getPhraseRarity(str: string, arr: ethers.Event[]): number {
   return phraseAmount / allPhrases.length * 100;
 }
 
+function getPhraseAttributes(
+  phrase: string,
+  events: ethers.Event[]
+): BinaryAttribute[] {
+  const phraseWords: string[] = phrase.split(' ');
+  const phraseCharCount: number = phraseWords.reduce((prev: number, curr: string) => prev + curr.length, 0);
+  return [
+    {
+      trait_type: 'rarity',
+      value: getPhraseRarity(phrase, events)
+    },
+    {
+      trait_type: 'word amount',
+      value: phraseWords.length
+    },
+    {
+      trait_type: 'character amount',
+      value: phraseCharCount
+    }
+  ];
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData | string>
@@ -74,21 +97,23 @@ export default async function handler(
     return;
   }
 
+  const binaryValue = hex2bin(hash);
+  const binaryAttributes = getHashBinaryAttributes(hash);
+
   //TODO: temp phrase solution for now
   const generatedFilter = hashesContract.filters.Generated();
   const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
   const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
 
   const phrase = tokenIdEvent?.args?.phrase;
-  const phraseRarity = phrase ? getPhraseRarity(phrase, AllGeneratedEvents) : 0;
-
-  const binaryAttributes = getHashBinaryAttributes(hash);
+  const phraseAttributes = phrase ? getPhraseAttributes(phrase, AllGeneratedEvents) : [];
 
   res.status(200).json({
     hash,
+    binary_value: binaryValue,
     binary_attributes: binaryAttributes,
     type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
-    phrase: phrase || 'Phrase is being non-fungibilitized... check back soon!',
-    phrase_rarity: phraseRarity
+    phrase_value: phrase || 'Phrase is being non-fungibilitized... check back soon!',
+    phrase_attributes: phraseAttributes
   });
 }
