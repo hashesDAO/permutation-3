@@ -77,38 +77,46 @@ export default async function handler(
 
   const hashesContract = getHashesContract(1);
 
-  const nonce = await hashesContract.nonce();
-  if (Number(tokenId) > nonce) {
-    res.status(404).send('tokenId value must be less than the amount of hashes generated');
-    return;
+  try {
+    const nonce = await hashesContract.nonce();
+    if (Number(tokenId) > nonce) {
+      res.status(404).send('tokenId value must be less than the amount of hashes generated');
+      return;
+    }
+  } catch (error) {
+    console.error(`error getting nonce: ${error}`);
   }
 
-  const [hash, isDeactivated]: [string, boolean] = await Promise.all([
-    hashesContract.getHash(tokenId),
-    hashesContract.deactivated(tokenId),
-  ]);
+  try {
+    const [hash, isDeactivated]: [string, boolean] = await Promise.all([
+      hashesContract.getHash(tokenId),
+      hashesContract.deactivated(tokenId),
+    ]);
 
-  if (hash === ethers.constants.HashZero) {
-    res.status(404).send('token not found');
-    return;
+    if (hash === ethers.constants.HashZero) {
+      res.status(404).send('token not found');
+      return;
+    }
+
+    const binaryValue = hex2bin(hash);
+    const binaryAttributes = getHashBinaryAttributes(hash);
+
+    const generatedFilter = hashesContract.filters.Generated();
+    const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
+    const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+
+    const phrase = tokenIdEvent?.args?.phrase ? tokenIdEvent?.args?.phrase : null;
+    const phraseAttributes = phrase ? getPhraseAttributes(phrase, AllGeneratedEvents) : [];
+
+    res.status(200).json({
+      hash,
+      binary_value: binaryValue,
+      binary_attributes: binaryAttributes,
+      type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
+      phrase_value: phrase,
+      phrase_attributes: phraseAttributes
+    });
+  } catch (error) {
+    console.error(`error calling contract: ${error}`);
   }
-
-  const binaryValue = hex2bin(hash);
-  const binaryAttributes = getHashBinaryAttributes(hash);
-
-  const generatedFilter = hashesContract.filters.Generated();
-  const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
-  const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
-
-  const phrase = tokenIdEvent?.args?.phrase;
-  const phraseAttributes = getPhraseAttributes(phrase, AllGeneratedEvents);
-
-  res.status(200).json({
-    hash,
-    binary_value: binaryValue,
-    binary_attributes: binaryAttributes,
-    type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
-    phrase_value: phrase,
-    phrase_attributes: phraseAttributes
-  });
 }
