@@ -25,7 +25,7 @@ export default async function handler(
 
   //TODO: validate wallet has hash erc21 token, else return 400
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(1);
+  const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
 
   try {
     const [
