@@ -19,7 +19,7 @@ export default async function handler(
     typeof(address) !== 'string' ||
     !ethers.utils.isAddress(address)
   ) {
-    res.status(400).send('valid wallet address must be provided');
+    res.status(400).send('valid (non-ens) wallet address must be provided');
     return;
   }
 
