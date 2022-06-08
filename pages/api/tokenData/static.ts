@@ -5,8 +5,9 @@ import {
   hex2bin,
   getHashesContract
 } from '../../../util';
+import * as swearjar from 'swearjar';
 
-type BinaryAttribute = { trait_type: string, value: number };
+type BinaryAttribute = { trait_type: string, value: number | boolean | string };
 
 type ResponseData = {
   hash: string
@@ -60,6 +61,10 @@ function getPhraseAttributes(
     {
       trait_type: 'character amount',
       value: phraseCharCount
+    },
+    {
+      trait_type: 'on banlist',
+      value: swearjar.profane(phrase) ? true : false
     }
   ];
 }
