@@ -1,13 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { ethers } from 'ethers';
+import { ethers, utils } from 'ethers';
 
-type Data = {
-  name: string
+type ResponseData = {
+  current_eth_balance: number
+  first_transaction_timestamp: number
+  transaction_count: number
+  eth_spent: number
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data | string>
+  res: NextApiResponse<ResponseData | string>
 ) {
   const { address } = req.query;
 
@@ -19,17 +22,26 @@ export default async function handler(
     res.status(400).send('valid wallet address must be provided');
     return;
   }
-  //eth balance
+
   const etherscanProvider = new ethers.providers.EtherscanProvider(1);
   const ethBalance = await etherscanProvider.getBalance(address);
-  const formattedEthBalance = ethers.utils.formatEther(ethBalance);
+  const formattedEthBalance = Number(utils.formatEther(ethBalance));
 
-  //date of first txn
   const history = await etherscanProvider.getHistory(address);
-  const firstTxnTimestamp = history[0].timestamp;
+  const firstTxTimestamp = history[0].timestamp!;
 
-  //amount of txns
-  const txnAmount = await etherscanProvider.getTransactionCount(address);
+  //value spent (including erc-20 tokens?)
+  const ethSpent = history
+    .filter(tx => tx.from === address)
+    .map(tx => Number(utils.formatUnits(tx.value, "ether")))
+    .reduce((prev, curr) => prev + curr, 0);
 
-  res.status(200).json({ name: 'John Doe' })
+  const txCount = await etherscanProvider.getTransactionCount(address);
+
+  res.status(200).json({
+    current_eth_balance: formattedEthBalance,
+    first_transaction_timestamp: firstTxTimestamp,
+    transaction_count: txCount,
+    eth_spent: ethSpent
+   })
 }
