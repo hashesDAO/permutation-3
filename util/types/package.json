@@ -1,0 +1,14 @@
+{
+    "name": "@hashes/types",
+    "version": "0.0.1",
+    "description": "Types for hashes",
+    "main": "lib/src/index.js",
+    "typings": "lib/src/index.d.ts",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc -b"
+    },
+    "dependencies": {
+        "ethers": "^5.5.2"
+    }
+}
