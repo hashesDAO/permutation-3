@@ -23,25 +23,37 @@ export default async function handler(
     return;
   }
 
+  //TODO: validate wallet has hash erc21 token, else return 400
+
   const etherscanProvider = new ethers.providers.EtherscanProvider(1);
-  const ethBalance = await etherscanProvider.getBalance(address);
-  const formattedEthBalance = Number(utils.formatEther(ethBalance));
 
-  const history = await etherscanProvider.getHistory(address);
-  const firstTxTimestamp = history[0].timestamp!;
+  try {
+    const [
+      balance,
+      history,
+      txCount
+    ] = await Promise.all([
+      etherscanProvider.getBalance(address),
+      etherscanProvider.getHistory(address),
+      etherscanProvider.getTransactionCount(address)
+    ]);
 
-  //value spent (including erc-20 tokens?)
-  const ethSpent = history
-    .filter(tx => tx.from === address)
-    .map(tx => Number(utils.formatUnits(tx.value, "ether")))
-    .reduce((prev, curr) => prev + curr, 0);
+    const formattedBalance = Number(utils.formatEther(balance));
+    const firstTxTimestamp = history[0].timestamp!;
 
-  const txCount = await etherscanProvider.getTransactionCount(address);
+    //value spent (including erc-20 tokens?)
+    const ethSpent = history
+      .filter(tx => tx.from === address)
+      .map(tx => Number(utils.formatUnits(tx.value, "ether")))
+      .reduce((prev, curr) => prev + curr, 0);
 
-  res.status(200).json({
-    current_eth_balance: formattedEthBalance,
-    first_transaction_timestamp: firstTxTimestamp,
-    transaction_count: txCount,
-    eth_spent: ethSpent
-   })
+    res.status(200).json({
+      current_eth_balance: formattedBalance,
+      first_transaction_timestamp: firstTxTimestamp,
+      transaction_count: txCount,
+      eth_spent: ethSpent
+    });
+  } catch (error) {
+    console.error(`error calling etherscan: ${error}`);
+  }
 }
