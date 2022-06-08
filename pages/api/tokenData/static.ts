@@ -6,8 +6,6 @@ import {
   getHashesContract
 } from '../../../util';
 
-type BinaryAttribute = { trait_type: string, value: number };
-
 type ResponseData = {
   hash: string
   binary_value: string

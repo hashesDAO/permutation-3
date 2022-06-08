@@ -10,3 +10,5 @@ interface Attribute {
   description: string;
   calculationFunction?: (string) => any;
 }
+
+type BinaryAttribute = { trait_type: string, value: number };
