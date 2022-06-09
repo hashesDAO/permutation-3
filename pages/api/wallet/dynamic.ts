@@ -4,6 +4,7 @@ import {
   getHashesContract,
   getHashesDAOContract
  } from '../../../util';
+ import { getHashesCount } from '../../../util/validate';
 
 type WalletHash = {
   hash_value: string
@@ -33,12 +34,15 @@ export default async function handler(
     return;
   }
 
-  //TODO: put as util fn
   const hashesContract = getHashesContract(1);
-  const hashesBalance = await hashesContract.balanceOf(address);
-  const hashCount = hashesBalance.toNumber();
+  const hashesCount = await getHashesCount(hashesContract, address);
 
-  if (hashCount === 0) {
+  if (hashesCount instanceof Error) {
+    res.status(500).send(hashesCount.message);
+    return;
+  }
+
+  if (!hashesCount) {
     res.status(404).send('wallet does not have a hash token');
     return;
   }
@@ -47,7 +51,7 @@ export default async function handler(
   const currentBlockNumber = await etherscanProvider.getBlockNumber();
 
   const hashes = [];
-  for (let i = 0; i < hashCount; i++) {
+  for (let i = 0; i < hashesCount; i++) {
     const tokenId = await hashesContract.tokenOfOwnerByIndex(address, i);
     const [hash, isDeactivated]: [string, boolean] = await Promise.all([
       hashesContract.getHash(tokenId),

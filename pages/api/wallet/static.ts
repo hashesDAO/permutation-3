@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers, utils } from 'ethers';
 import { getHashesContract } from '../../../util';
+import { getHashesCount } from '../../../util/validate';
 
 type ResponseData = {
   current_eth_balance: number
@@ -26,9 +27,14 @@ export default async function handler(
 
   try {
     const hashesContract = getHashesContract(1);
-    const hashesBalance = await hashesContract.balanceOf(address);
+    const hashesCount = await getHashesCount(hashesContract, address);
 
-    if (hashesBalance.toNumber() === 0) {
+    if (hashesCount instanceof Error) {
+      res.status(500).send(hashesCount.message);
+      return;
+    }
+
+    if (!hashesCount) {
       res.status(404).send('wallet does not have a hash token');
       return;
     }
