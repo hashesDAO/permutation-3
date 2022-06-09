@@ -1,10 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers } from 'ethers';
+import { getHashesContract, getHashesDAOContract } from '../../../util';
 import {
-  getHashesContract,
-  getHashesDAOContract
- } from '../../../util';
- import { getHashesCount, getHashType, hashType } from '../../../util/validate';
+  getHashesCount,
+  getHashType,
+  hashType,
+  isValidAddress
+} from '../../../util/validate';
 
 type WalletHash = {
   hash_value: string
