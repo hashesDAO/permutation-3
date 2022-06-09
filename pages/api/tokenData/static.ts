@@ -6,6 +6,7 @@ import {
   getHashesContract
 } from '../../../util';
 import * as swearjar from 'swearjar';
+import { getHashType, hashType } from '../../../util/validate';
 
 type BinaryAttribute = { trait_type: string, value: number | boolean | string };
 
@@ -13,7 +14,7 @@ type ResponseData = {
   hash: string
   binary_value: string
   binary_attributes: BinaryAttribute[]
-  type: string
+  type: hashType
   phrase_value: string
   phrase_attributes: BinaryAttribute[]
 };
@@ -112,12 +113,13 @@ export default async function handler(
 
     const phrase = tokenIdEvent?.args?.phrase ? tokenIdEvent?.args?.phrase : null;
     const phraseAttributes = phrase ? getPhraseAttributes(phrase, AllGeneratedEvents) : [];
+    const type = getHashType(tokenId, isDeactivated);
 
     res.status(200).json({
       hash,
       binary_value: binaryValue,
       binary_attributes: binaryAttributes,
-      type: Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO',
+      type,
       phrase_value: phrase,
       phrase_attributes: phraseAttributes
     });

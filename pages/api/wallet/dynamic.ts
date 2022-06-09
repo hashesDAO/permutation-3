@@ -4,11 +4,11 @@ import {
   getHashesContract,
   getHashesDAOContract
  } from '../../../util';
- import { getHashesCount } from '../../../util/validate';
+ import { getHashesCount, getHashType, hashType } from '../../../util/validate';
 
 type WalletHash = {
   hash_value: string
-  type: 'DAO' | 'DAO Deactivated' | 'Standard' //TODO: make as enum
+  type: hashType
   minted_by_address: boolean
   blocks_held: number
 }
@@ -64,8 +64,7 @@ export default async function handler(
 
     const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
     const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
-    //TODO: put into util fn
-    const type = Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO';
+    const type = getHashType(tokenId, isDeactivated);
 
     hashes.push({
       hash_value: hash,

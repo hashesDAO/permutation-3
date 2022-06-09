@@ -11,3 +11,12 @@ export async function getHashesCount(
     return new Error(`error getting contract balance: ${error}`);
   }
 }
+
+export type hashType = 'DAO' | 'DAO Deactivated' | 'Standard';
+
+export function getHashType(
+  tokenId: string,
+  isDeactivated: boolean
+): hashType {
+  return Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO';
+}
