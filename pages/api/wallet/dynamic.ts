@@ -27,6 +27,11 @@ export default async function handler(
 ) {
   const { address } = req.query;
 
+  if (typeof(address) !== 'string') {
+    res.status(400).send('address must be a string');
+    return;
+  }
+
   if (!isValidAddress(address)) {
     res.status(400).send('valid (non-ens) wallet address must be provided');
     return;
