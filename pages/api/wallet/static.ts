@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers, utils } from 'ethers';
 import { getHashesContract } from '../../../util';
-import { getHashesCount } from '../../../util/validate';
+import { getHashesCount, isValidAddress } from '../../../util/validate';
 
 type ResponseData = {
   current_eth_balance: number
@@ -16,11 +16,7 @@ export default async function handler(
 ) {
   const { address } = req.query;
 
-  if (
-    !address ||
-    typeof(address) !== 'string' ||
-    !ethers.utils.isAddress(address)
-  ) {
+  if (!isValidAddress(address)) {
     res.status(400).send('valid (non-ens) wallet address must be provided');
     return;
   }

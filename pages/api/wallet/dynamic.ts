@@ -21,15 +21,11 @@ type ResponseData = {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseData | string | any>
+  res: NextApiResponse<ResponseData | string>
 ) {
   const { address } = req.query;
 
-  if (
-    !address ||
-    typeof(address) !== 'string' ||
-    !ethers.utils.isAddress(address)
-  ) {
+  if (!isValidAddress(address)) {
     res.status(400).send('valid (non-ens) wallet address must be provided');
     return;
   }
@@ -94,6 +90,7 @@ export default async function handler(
     res.status(200).json({
       hashes,
       on_chain_votes: votesCastByAddress,
+      owns_perm_2_nft: false
     });
   } catch (error) {
     console.error(`error getting dynamic data: ${error}`);

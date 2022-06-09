@@ -20,3 +20,9 @@ export function getHashType(
 ): hashType {
   return Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO';
 }
+
+export function isValidAddress(address: string): boolean {
+  return typeof(address) === 'string' &&
+  address.length !== 0 &&
+  ethers.utils.isAddress(address);
+}
