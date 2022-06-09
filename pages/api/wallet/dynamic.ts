@@ -33,6 +33,7 @@ export default async function handler(
     return;
   }
 
+  //TODO: put as util fn
   const hashesContract = getHashesContract(1);
   const hashesBalance = await hashesContract.balanceOf(address);
   const hashCount = hashesBalance.toNumber();

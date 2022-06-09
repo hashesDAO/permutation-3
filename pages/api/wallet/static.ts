@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers, utils } from 'ethers';
+import { getHashesContract } from '../../../util';
 
 type ResponseData = {
   current_eth_balance: number
@@ -23,7 +24,13 @@ export default async function handler(
     return;
   }
 
-  //TODO: validate wallet has hash erc21 token, else return 400
+  const hashesContract = getHashesContract(1);
+  const hashesBalance = await hashesContract.balanceOf(address);
+
+  if (hashesBalance.toNumber() === 0) {
+    res.status(404).send('wallet does not have a hash token');
+    return;
+  }
 
   const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
 
