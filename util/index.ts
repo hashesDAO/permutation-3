@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
 import HASHES_ABI from './Hashes.json';
 import HASHES_DAO_ABI from './HashesDAO.json';
+import Addresses from '../addresses.json';
+import { CollectionNFTCloneableV1__factory } from './types/src';
 
 export function hex2bin(hex: string) {
   return hex
@@ -45,4 +47,15 @@ export function getHashesDAOContract(): ethers.Contract {
   const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const newContract =  new ethers.Contract(HASHESDAO_ADDRESS[chainId], HASHES_DAO_ABI.abi, provider);
   return newContract;
+}
+
+export function getHashesCollectionContract(address: string): ethers.Contract {
+  const chainId = 1; //temp
+  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[1]);
+  const hashesCollectionContract = CollectionNFTCloneableV1__factory.connect(
+    address,
+    provider
+  );
+
+  return hashesCollectionContract;
 }

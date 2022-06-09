@@ -1,12 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers } from 'ethers';
-import { getHashesContract, getHashesDAOContract } from '../../../util';
+import {
+  getHashesContract,
+  getHashesDAOContract,
+  getHashesCollectionContract
+} from '../../../util';
 import {
   getHashesCount,
   getHashType,
   hashType,
   isValidAddress
 } from '../../../util/validate';
+import Addresses from '../../../addresses.json';
 
 type WalletHash = {
   hash_value: string
@@ -94,10 +99,19 @@ export default async function handler(
         .length;
     }
 
+    const medleyLimitedContract = getHashesCollectionContract(Addresses.medleyLimitedEditionCollectionAddress);
+    const medleyLimitedCount = await getHashesCount(medleyLimitedContract, address);
+
+    const medleyStillsContract = getHashesCollectionContract(Addresses.medleyStillsCollectionAddress);
+    const medleyStillsCount = await getHashesCount(medleyStillsContract, address);
+    const medleyNftCount =
+      !(medleyLimitedCount instanceof Error) &&
+      !(medleyStillsCount instanceof Error) ? medleyLimitedCount + medleyStillsCount : 0;
+
     res.status(200).json({
       hashes,
       on_chain_votes: votesCastByAddress,
-      owns_perm_2_nft: false
+      owns_perm_2_nft: medleyNftCount > 0,
     });
   } catch (error) {
     console.error(`error getting dynamic data: ${error}`);
