@@ -24,17 +24,17 @@ export default async function handler(
     return;
   }
 
-  const hashesContract = getHashesContract(1);
-  const hashesBalance = await hashesContract.balanceOf(address);
-
-  if (hashesBalance.toNumber() === 0) {
-    res.status(404).send('wallet does not have a hash token');
-    return;
-  }
-
-  const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
-
   try {
+    const hashesContract = getHashesContract(1);
+    const hashesBalance = await hashesContract.balanceOf(address);
+
+    if (hashesBalance.toNumber() === 0) {
+      res.status(404).send('wallet does not have a hash token');
+      return;
+    }
+
+    const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
+
     const [
       balance,
       history,
