@@ -47,51 +47,55 @@ export default async function handler(
     return;
   }
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
-  const currentBlockNumber = await etherscanProvider.getBlockNumber();
+  try {
+    const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
+    const currentBlockNumber = await etherscanProvider.getBlockNumber();
 
-  const hashes = [];
-  for (let i = 0; i < hashesCount; i++) {
-    const tokenId = await hashesContract.tokenOfOwnerByIndex(address, i);
-    const [hash, isDeactivated]: [string, boolean] = await Promise.all([
-      hashesContract.getHash(tokenId),
-      hashesContract.deactivated(tokenId),
-    ]);
+    const hashes = [];
+    for (let i = 0; i < hashesCount; i++) {
+      const tokenId = await hashesContract.tokenOfOwnerByIndex(address, i);
+      const [hash, isDeactivated]: [string, boolean] = await Promise.all([
+        hashesContract.getHash(tokenId),
+        hashesContract.deactivated(tokenId),
+      ]);
 
-    const generatedFilter = hashesContract.filters.Generated();
-    const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
-    const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+      const generatedFilter = hashesContract.filters.Generated();
+      const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
+      const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
 
-    const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
-    const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
-    const type = getHashType(tokenId, isDeactivated);
+      const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
+      const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
+      const type = getHashType(tokenId, isDeactivated);
 
-    hashes.push({
-      hash_value: hash,
-      type,
-      minted_by_address: artist === address,
-      blocks_held: blocksHeld,
+      hashes.push({
+        hash_value: hash,
+        type,
+        minted_by_address: artist === address,
+        blocks_held: blocksHeld,
+      });
+    };
+
+    const hasNonStandardHash = hashes
+      ?.map(hash => hash.type)
+      .some(type => type === 'DAO' || type === 'DAO Deactivated');
+
+    let votesCastByAddress = 0;
+
+    if (hasNonStandardHash) {
+      const hashesDAOContract = getHashesDAOContract();
+      const voteCastFilter = hashesDAOContract.filters.VoteCast();
+      const allVoteCastEvents = await hashesDAOContract.queryFilter(voteCastFilter);
+
+      votesCastByAddress = allVoteCastEvents
+        .filter(event => event?.args?.voter.toLowerCase() === address.toLowerCase())
+        .length;
+    }
+
+    res.status(200).json({
+      hashes,
+      on_chain_votes: votesCastByAddress,
     });
-  };
-
-  const hasNonStandardHash = hashes
-    ?.map(hash => hash.type)
-    .some(type => type === 'DAO' || type === 'DAO Deactivated');
-
-  let votesCastByAddress = 0;
-
-  if (hasNonStandardHash) {
-    const hashesDAOContract = getHashesDAOContract();
-    const voteCastFilter = hashesDAOContract.filters.VoteCast();
-    const allVoteCastEvents = await hashesDAOContract.queryFilter(voteCastFilter);
-
-    votesCastByAddress = allVoteCastEvents
-      .filter(event => event?.args?.voter.toLowerCase() === address.toLowerCase())
-      .length;
+  } catch (error) {
+    console.error(`error getting dynamic data: ${error}`);
   }
-
-  res.status(200).json({
-    hashes,
-    on_chain_votes: votesCastByAddress,
-  });
 }
