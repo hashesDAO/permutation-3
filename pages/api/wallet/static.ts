@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers, utils } from 'ethers';
+import { getHashesContract } from '../../../util';
+import { getHashesCount, isValidAddress } from '../../../util/validate';
 
 type ResponseData = {
   current_eth_balance: number
@@ -14,20 +16,33 @@ export default async function handler(
 ) {
   const { address } = req.query;
 
-  if (
-    !address ||
-    typeof(address) !== 'string' ||
-    !ethers.utils.isAddress(address)
-  ) {
+
+  if (typeof(address) !== 'string') {
+    res.status(400).send('address must be a string');
+    return;
+  }
+
+  if (!isValidAddress(address)) {
     res.status(400).send('valid (non-ens) wallet address must be provided');
     return;
   }
 
-  //TODO: validate wallet has hash erc21 token, else return 400
-
-  const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
-
   try {
+    const hashesContract = getHashesContract(1);
+    const hashesCount = await getHashesCount(hashesContract, address);
+
+    if (hashesCount instanceof Error) {
+      res.status(500).send(hashesCount.message);
+      return;
+    }
+
+    if (!hashesCount) {
+      res.status(404).send('wallet does not have a hash token');
+      return;
+    }
+
+    const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
+
     const [
       balance,
       history,
