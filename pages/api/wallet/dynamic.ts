@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { ethers } from 'ethers';
+import { ethers, utils } from 'ethers';
 import {
   getHashesContract,
   getHashesDAOContract,
@@ -18,6 +18,8 @@ type WalletHash = {
   type: hashType
   minted_by_address: boolean
   blocks_held: number
+  purchased_above_mint_price: boolean | null
+  token_id: number
 }
 
 type ResponseData = {
@@ -59,7 +61,7 @@ export default async function handler(
     const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
     const currentBlockNumber = await etherscanProvider.getBlockNumber();
 
-    const hashes = [];
+    const hashes: WalletHash[] = [];
     for (let i = 0; i < hashesCount; i++) {
       const tokenId = await hashesContract.tokenOfOwnerByIndex(address, i);
       const [hash, isDeactivated]: [string, boolean] = await Promise.all([
@@ -68,8 +70,8 @@ export default async function handler(
       ]);
 
       const generatedFilter = hashesContract.filters.Generated();
-      const AllGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
-      const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+      const allGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
+      const tokenIdEvent = allGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
 
       const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
       const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
@@ -80,8 +82,37 @@ export default async function handler(
         type,
         minted_by_address: artist === address,
         blocks_held: blocksHeld,
+        purchased_above_mint_price: false,
+        token_id: tokenId.toNumber(),
       });
     };
+
+    const hashesNotMinted = hashes
+      .filter(hash => hash.minted_by_address === false)
+      .map(hash => hash.token_id);
+
+    if (hashesNotMinted.length) {
+      const transferFilter = hashesContract.filters.Transfer();
+      const allTransferEvents = await hashesContract.queryFilter(transferFilter);
+      const transferEventsToAddress = allTransferEvents
+        .filter(event => event?.args?.to.toLowerCase() === address.toLowerCase())
+        .map(ev => ({
+          transactionHash: ev.transactionHash,
+          tokenId: ev?.args?.tokenId.toNumber(),
+        }));
+
+      transferEventsToAddress.map(async (tx) => {
+        if (hashesNotMinted.includes(tx.tokenId)) {
+          const txDetails =  await etherscanProvider.getTransaction(tx.transactionHash);
+          const formattedBalance = Number(utils.formatEther(txDetails.value));
+          const purchasedAboveMintPrice = formattedBalance > 1;
+
+          hashes.map(hash => {
+            if (hash.token_id === tx.tokenId) hash.purchased_above_mint_price = purchasedAboveMintPrice;
+          });
+        }
+      });
+    }
 
     const hasNonStandardHash = hashes
       ?.map(hash => hash.type)
