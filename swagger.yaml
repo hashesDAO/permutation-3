@@ -1,0 +1,185 @@
+swagger: "2.0"
+info:
+  description: "This is an ongoing library of API endpoints created for hashesDAO to provide metadata associated with a hash or a hash holder's wallet. This data empowers creators to further explore the possibilities of making generative artwork based on hashes."
+  version: "1.0.0"
+  title: "Permutation 3 API"
+  contact:
+    url: "https://github.com/hashesDAO/permutation-3"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "petstore.swagger.io"
+basePath: "/api"
+tags:
+- name: "token"
+  description: "hash metadata"
+- name: "wallet"
+  description: "hash holder wallet data"
+schemes:
+- "https"
+paths:
+  /token/{tokenId}:
+    get:
+      tags:
+      - "token"
+      summary: "Metadata associated with a given hash"
+      description: "For valid response, try integers associated with a tokenID. Other values will generate exceptions."
+      operationId: "getTokenData"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "tokenId"
+        in: "path"
+        description: "TokenIds are a reference to an individual hash's mint edition number."
+        required: true
+        type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/TokenData"
+        "400":
+          description: "tokenId must be a number"
+        "404":
+          description: "tokenId value must be less than the amount of hashes generated"
+  /wallet/{address}:
+    get:
+      tags:
+      - "wallet"
+      summary: "Historical eth data"
+      description: "For valid response, try a non-ens address associated with a current hash holder. If an address is valid but does not hold a hash nft, it will generate an exception."
+      operationId: "getStaticWalletData"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "address"
+        in: "path"
+        description: "wallet address of a hash holder"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/WalletData"
+        "400":
+          description: "address must be a string"
+        "404":
+          description: "valid (non-ens) wallet address must be provided"
+  /wallet/hashes/{address}:
+    get:
+      tags:
+      - "wallet"
+      summary: "HashesDAO-specific data"
+      description: "For valid response, try a non-ens address associated with a current hash holder. If an address is valid but does not hold a hash nft, it will generate an exception."
+      operationId: "getWalletHashData"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "address"
+        in: "path"
+        description: "wallet address of a hash holder"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/WalletHashData"
+        "400":
+          description: "address must be a string"
+        "404":
+          description: "wallet does not have a hash token"
+definitions:
+  Trait:
+    type: "object"
+    properties:
+      trait_type:
+        type: "string"
+        example: "trait title"
+      value:
+        type: "integer"
+        example: 1
+  TokenData:
+    type: "object"
+    properties:
+      hash:
+        type: "string"
+        example: '0x5c2d581b129a5ef0cf91a04c2af0d1998e48074ea89485b327570242de06e4a5'
+      binary_value:
+        type: "string"
+        example: "0101110000101101010110000001101100010010100110100101111011110000110011111001000110100000010011000010101011110000110100011001100110001110010010000000011101001110101010001001010010000101101100110010011101010111000000100100001011011110000001101110010010100101"
+      binary_attributes:
+        type: array
+        items:
+          $ref: "#/definitions/Trait"
+      type:
+        type: "string"
+        enum:
+        - "DAO"
+        - "DAO Deactivated"
+        - "Standard"
+        example: "DAO"
+      phrase_value:
+        type: "string"
+        example: "satoshi"
+      phrase_attributes:
+        type: array
+        items:
+          $ref: "#/definitions/Trait"
+  WalletData:
+    type: "object"
+    properties:
+      current_eth_balance:
+        type: "number"
+        example: 0.026548247680687136
+      first_transaction_timestamp:
+        type: "integer"
+        example: 1613013614
+      transaction_count:
+        type: "integer"
+        example: 65
+      eth_spent:
+        type: "number"
+        example: 8.347151549125913
+  HeldTokenData:
+    type: "object"
+    properties:
+      hash_value:
+        type: "string"
+        example: '0x5c2d581b129a5ef0cf91a04c2af0d1998e48074ea89485b327570242de06e4a5'
+      type:
+        type: "string"
+        enum:
+        - "DAO"
+        - "DAO Deactivated"
+        - "Standard"
+        example: "DAO"
+      minted_by_address:
+        type: "boolean"
+        example: false
+      blocks_held:
+        type: "integer"
+        example: 1590020
+      purchased_above_mint_price:
+        type: "boolean"
+        example: true
+      token_id:
+        type: "integer"
+        example: 450
+  WalletHashData:
+    type: "object"
+    properties:
+      hashes:
+        type: array
+        items:
+          $ref: "#/definitions/HeldTokenData"
+      on_chain_votes:
+        type: "integer"
+        example: 1
+      owns_perm_2_nft:
+        type: "boolean"
+        example: true
+externalDocs:
+  description: "HashesDAO"
+  url: "https://thehashes.xyz/"

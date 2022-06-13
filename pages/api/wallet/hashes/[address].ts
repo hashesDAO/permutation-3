@@ -4,14 +4,14 @@ import {
   getHashesContract,
   getHashesDAOContract,
   getHashesCollectionContract
-} from '../../../util';
+} from '../../../../util';
 import {
   getHashesCount,
   getHashType,
   hashType,
   isValidAddress
-} from '../../../util/validate';
-import Addresses from '../../../addresses.json';
+} from '../../../../util/validate';
+import Addresses from '../../../../addresses.json';
 
 type WalletHash = {
   hash_value: string
