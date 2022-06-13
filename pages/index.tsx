@@ -3,6 +3,6 @@ import 'swagger-ui-react/swagger-ui.css';
 
 export default function Home() {
   return (
-      <SwaggerUI url="https://petstore.swagger.io/v2/swagger.json" />
+      <SwaggerUI url="/api/docs" />
   )
 }
