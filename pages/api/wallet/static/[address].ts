@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { ethers, utils } from 'ethers';
-import { getHashesContract } from '../../../util';
-import { getHashesCount, isValidAddress } from '../../../util/validate';
+import { getHashesContract } from '../../../../util';
+import { getHashesCount, isValidAddress } from '../../../../util/validate';
 
 type ResponseData = {
   current_eth_balance: number
