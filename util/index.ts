@@ -1,7 +1,6 @@
 import { ethers } from 'ethers';
 import HASHES_ABI from './Hashes.json';
 import HASHES_DAO_ABI from './HashesDAO.json';
-import Addresses from '../addresses.json';
 import { CollectionNFTCloneableV1__factory } from './types/src';
 
 export function hex2bin(hex: string) {

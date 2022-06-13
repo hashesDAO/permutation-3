@@ -15,7 +15,7 @@ export async function getHashesCount(
 export type hashType = 'DAO' | 'DAO Deactivated' | 'Standard';
 
 export function getHashType(
-  tokenId: string,
+  tokenId: string | string[],
   isDeactivated: boolean
 ): hashType {
   return Number(tokenId) >= 1000 ? 'Standard' : isDeactivated ? 'DAO Deactivated' : 'DAO';
