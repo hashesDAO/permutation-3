@@ -36,7 +36,7 @@ export const HASHESDAO_ADDRESS = {
 
 export function getHashesContract(chain_id: number | undefined): ethers.Contract {
   const chainId = 1; //temp
-  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
+  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId], "01d9d6cf6429481bb892fad8698a3911");
   const newContract =  new ethers.Contract(HASHES_ADDRESS[chainId], HASHES_ABI.abi, provider);
   return newContract;
 }

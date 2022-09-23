@@ -3,17 +3,6 @@ import Addresses from '../../../addresses.json';
 
 //http://localhost:3000/api/sigil
 
-//Data I need for the first sigil collection:
-//Sigil Id as input - got
-//Owner of sigil Id - got
-//Hashes Id that minted - got
-//Number of DAO hashes owned - got 
-//Number of non-DAO hashes owned - got
-//Hashes phrase text - got
-//Hashes hash binary - got
-//Random number for colour palette (7 permutations) (can be the hashes hash as the seed maybe?) - got
-//Random font (14 permutations) - got
-
 type ProcessedTokenData = {
   hash: string
   binary_value: string
@@ -27,8 +16,7 @@ type ProcessedWalletData = {
 
 type ColourPalette = {
   name: string
-  background: string
-  foreground: string
+  colours: string[]
 }
 
 //Gets the Token Hashes data from pre-existing API
@@ -68,6 +56,7 @@ function processTokenAPIData(data: any): ProcessedTokenData {
 //Gets the Wallet Hashes data from pre-existing API
 async function getWalletAPIData(address: string) {
   try {
+
     const APIdata = await fetch(`http://localhost:3000/api/wallet/hashes/${address}`);
 
     const data = await APIdata.json();
@@ -119,17 +108,19 @@ function processWalletAPIData(data: any): ProcessedWalletData {
   return processedWalletData;
 }
 
+//Need to re-do how this function works
 function getColourPalette(seed: number): ColourPalette {
 
-  const colourPalette  = {} as ColourPalette;
+  const colourPalette = {} as ColourPalette;
 
   //Change later
-  const names = ["Hobbs", "Timmy", "Cerniak", "Cooki", "Deebee", "DMath", "Binmaker"];
-  const backgroundColours = ["crimson", "brown", "cornsilk", "black", "blue", "green", "yellow"];
-  const foregroundColours = ["brown", "cornsilk", "black", "blue", "green", "yellow", "crimson"];
+  const names = ["mono", "tyler", "Cerniak", "Cooki", "Deebee", "DMath", "Binmaker"];
+  const mono = ["#080808", "#222222", "#616161", "#AAAAAA", "#ECECEC"];
+  const tyler = ["#d12a2f", "#315f8c", "#3b2b20", "#b8d9ce", "#ebe4d8"];
 
-  colourPalette.background = backgroundColours[seed % backgroundColours.length];
-  colourPalette.foreground = foregroundColours[seed % foregroundColours.length];
+  const palettes = [mono, tyler];
+
+  colourPalette.colours = palettes[seed % palettes.length];
   colourPalette.name = names[seed % names.length];
 
   return colourPalette;
@@ -137,7 +128,7 @@ function getColourPalette(seed: number): ColourPalette {
 
 function getFont(seed: number): string {
 
-  const fonts = ["default", "sans-serif", "courier", "arial", "monospace", "cursive", "helvetica", "monospace", "fantasy"];
+  const fonts = ["Ropa+Sans", "Courier Prime", "Oswald", "Poppins", "Roboto Condensed", "Montserrat", "Bebas Neue", "Prompt", "Space Grotesque", "Righteous", "Archivo Black", "Tavaraj", "Gruppo", "Linden Hill"];
 
   return fonts[seed % fonts.length];
 }
@@ -153,15 +144,22 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, seed: number, processed
   const colourPalette = getColourPalette(seed);
 
   //Gets the font given the random seed
+  //Also needs to be amenable to snapshot variables
   const font = getFont(seed);
 
   //Hashes Id that minted the sigil
   const HashesID = `Token ID: ${hashesTokenId}`;
 
-  //Cut to prevent excessively long string (e.g. the BTC whitepaper lol)
-  const Phrase = processedTokenData.phrase_value.slice(0,70);
+  //Cut to prevent excessively long string
+  var Phrase = "";
+  if (processedTokenData.phrase_value == null || undefined) {
+  }
+  else {
+    Phrase = processedTokenData.phrase_value.slice(0,70);
+  }
 
   //The binary string of the hash - broken into four for display purposes
+  //Lose the binary
   const Binary0 = processedTokenData.binary_value.slice(0,64);
   const Binary1 = processedTokenData.binary_value.slice(64,128);
   const Binary2 = processedTokenData.binary_value.slice(128,192);
@@ -172,24 +170,29 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, seed: number, processed
 
   //Styles
 
+  //Importing the fonts
+  svgHTML = svgHTML.concat(`<defs><style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesque|Righteous|Archivo+Black|Tavaraj|Gruppo|Linden+Hill');</style></defs>`);
+
   //Sets the main0 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.foreground}; font-family: ${font}; font-size: 80px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[0]}; font-family: ${font}; font-size: 80px; text-anchor: middle }</style>`);
 
   //Sets the main1 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.foreground}; font-family: ${font}; font-size: 20px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.colours[0]}; font-family: ${font}; font-size: 20px; text-anchor: middle }</style>`);
 
   //Sets the support0 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.support0 { fill: ${colourPalette.foreground}; font-family: ${font}; font-size: 12px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.support0 { fill: ${colourPalette.colours[0]}; font-family: courier; font-size: 12px; text-anchor: middle }</style>`);
 
   //Sets the support1 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.support1 { fill: ${colourPalette.foreground}; font-family: ${font}; font-size: 6px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.support1 { fill: ${colourPalette.colours[0]}; font-family: courier; font-size: 6px; text-anchor: middle }</style>`);
 
   //Backgound
 
   //Sets the background colour
-  svgHTML = svgHTML.concat(`<rect width="100%" height="100%" fill= "${colourPalette.background}" />`);
+  svgHTML = svgHTML.concat(`<rect width="100%" height="100%" fill= "${colourPalette.colours[4]}" />`);
 
   //Main Text
+
+  //Whale: (__-){
   
   //Sets the main0 text - the DAO hash # characters
   //Number of strings depends on the number of DAO hashes owned
