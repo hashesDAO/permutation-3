@@ -3,6 +3,10 @@ import Addresses from '../../../addresses.json';
 
 //http://localhost:3000/api/sigil
 
+///////////////
+//The Structs//
+///////////////
+
 type ProcessedTokenData = {
   hash: string
   binary_value: string
@@ -25,6 +29,10 @@ type FontData = {
   font: string
   fontsize: string
 }
+
+/////////////////////////////////
+//The Data Collection Functions//
+/////////////////////////////////
 
 //Gets the Token Hashes data from pre-existing API
 async function getTokenAPIData(tokenId: number) {
@@ -127,6 +135,10 @@ function processWalletAPIData(data: any): ProcessedWalletData {
   return processedWalletData;
 }
 
+////////////////////////////
+//The SVG Helper Functions//
+////////////////////////////
+
 //Not sure I need this - Yeah I think I don't
 function isOwnerMinter(owner: string, minter: string): boolean {
   if(owner === minter) {
@@ -200,6 +212,7 @@ function getColoursUsed(seed: number, daohashes: number, nondaohashes: number): 
   return coloursUsed;
 }
 
+//Needs updating !!!
 function getFont(seed: number): string {
 
   const fonts = ["Ropa+Sans", "Courier Prime", "Oswald", "Poppins", "Roboto Condensed", "Montserrat", "Bebas Neue", "Prompt", "Space Grotesque", "Righteous", "Archivo Black", "Tavaraj", "Gruppo", "Linden Hill"];
@@ -229,7 +242,347 @@ function getPhrase(phrase: string): string {
   }
 }
 
+//Gets the output for the large pounds data displayed
+//Handles the edge cases of snapshot voter/proposer and whales
+function getLargePounds(daohashes: number, snapshotvoter: number, snapshotproposer: number, isConnected: boolean): string[] {
+
+  //defines the symbol
+  var symbol = "#";
+
+  //Changes the symbol of the owner has snapshot voted
+  if (snapshotvoter > 0) {
+    symbol = "╬";
+  }
+
+  //Changes the symbol of the owner has snapshot proposed
+  if (snapshotproposer > 0) {
+    symbol = "✹";
+  }
+
+  //If disconnected return a single string of NULL
+  if (isConnected == false) {
+    return ["NULL"];
+  }
+
+  //Then runs through the potential possible arrangements from nothing to whale
+
+  if (daohashes == 0) {
+    return [""];
+  }
+
+  if (daohashes == 1) {
+    return [symbol];
+  }
+
+  if (daohashes == 2) {
+
+    var line0 = symbol;
+
+    line0 = line0.concat(symbol);
+
+    return [line0];
+  }
+
+  if (daohashes == 3) {
+
+    var line0 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+
+    return [line0];
+  }
+
+  if (daohashes == 4) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol);
+    line1 = line1.concat(symbol);
+
+    return [line0, line1];
+  }
+
+  if (daohashes == 5) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol);
+
+    return [line0, line1];
+  }
+
+  if (daohashes == 6) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (daohashes == 7) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+    var line2 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line2 = line2.concat(symbol, symbol);
+
+    return [line0, line1, line2];
+  }
+
+  if (daohashes == 8) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+    var line2 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol);
+    line2 = line2.concat(symbol, symbol);
+
+    return [line0, line1, line2];
+  }
+
+  if (daohashes == 9) {
+
+    var line0 = symbol;
+    var line1 = symbol;
+    var line2 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol, symbol);
+    line2 = line2.concat(symbol, symbol);
+
+    return [line0, line1, line2];
+  }
+
+  //Else returns whale
+  return ["(__-){"];
+}
+
+function getSmallPounds(nondaohashes: number, isConnected: boolean): string[] {
+
+  //defines the symbol
+  var symbol = "#";
+
+  //If disconnected return a single string of NULL
+  if (isConnected == false) {
+    return [""];
+  }
+
+  //Then runs through the potential possible arrangements from nothing to whale
+
+  if (nondaohashes == 0) {
+    return [""];
+  }
+
+  if (nondaohashes == 1) {
+    return [symbol];
+  }
+
+  if (nondaohashes == 2) {
+    var line0 = symbol;
+
+    line0 = line0.concat(symbol);
+
+    return [line0];
+  }
+
+  if (nondaohashes == 3) {
+    var line0 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+
+    return [line0];
+  }
+
+  if (nondaohashes == 4) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol);
+    line1 = line1.concat(symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 5) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 6) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol);
+    line1 = line1.concat(symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 7) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 8) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 9) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 10) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 11) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 12) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 13) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 14) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 15) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 16) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 17) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 18) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 19) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+
+  if (nondaohashes == 20) {
+    var line0 = symbol;
+    var line1 = symbol;
+
+    line0 = line0.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+    line1 = line1.concat(symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol);
+
+    return [line0, line1];
+  }
+  
+  //Else returns whale
+  return [".___."];
+}
+
+////////////////////////////////
+//The SVG Constructor Function//
+////////////////////////////////
+
 //Returns the SVG image for the NFT
+//It's essentially just manipualting a single massive string which defines the NFT image
 function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, seed: number, processedTokenData: ProcessedTokenData, processedWalletData: ProcessedWalletData): string {
 
   //Size and positioning controlled with these variables
@@ -280,181 +633,42 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   //Main Text
 
-  //DAO Whale: (__-){
-  //Non-DAO Whale: .___.
+  const largePoundStrings = getLargePounds(processedWalletData.dao, processedWalletData.votes, processedWalletData.proposals, isConnected);
 
-  //This needs polishing with formatting/location anyway
-  
-  //Sets the main0 text - the DAO hash # characters
-  //Number of strings depends on the number of DAO hashes owned
-  //If number of DAO hashes owned exceeds 9 then only 9 are shown regardless
-  //All of this messy logic to deal with the display of the pound signs
-  if (processedWalletData.dao < 4) {
-
-    var largePound0 = "";
-
-    for (let k = 0; k < processedWalletData.dao; k++) {
-
-      largePound0 = largePound0.concat("#");
-    }
+  if (largePoundStrings.length == 1) {
 
     //Sets the single line of pounds
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3}" class="main0">${largePound0}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3}" class="main0">${largePoundStrings[0]}</text>`);
   }
-  if ((processedWalletData.dao >= 4) && (processedWalletData.dao < 7)) {
-
-    var largePound0 = "";
-    var largePound1 = "";
-
-    if (processedWalletData.dao == 4) {
-
-      largePound0 = "##";
-      largePound1 = "##";
-    }
-    if (processedWalletData.dao == 5) {
-
-      largePound0 = "###";
-      largePound1 = "##";
-    }
-    if (processedWalletData.dao == 6) {
-
-      largePound0 = "###";
-      largePound1 = "###";
-    }
+  if (largePoundStrings.length == 2) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/12}" class="main0">${largePound0}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/12}" class="main0">${largePound1}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/12}" class="main0">${largePoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/12}" class="main0">${largePoundStrings[1]}</text>`);
   }
-  if ((processedWalletData.dao >= 7)) {
-
-    var largePound0 = "";
-    var largePound1 = "";
-    var largePound2 = "";
-
-    if (processedWalletData.dao == 7) {
-
-      largePound0 = "###";
-      largePound1 = "#";
-      largePound2 = "###";
-    }
-    if (processedWalletData.dao == 8) {
-
-      largePound0 = "###";
-      largePound1 = "##";
-      largePound2 = "###";
-    }
-    if (processedWalletData.dao >= 9) {
-
-      largePound0 = "###";
-      largePound1 = "###";
-      largePound2 = "###";
-    }
+  if (largePoundStrings.length == 3) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/6 + ydimension/36}" class="main0">${largePound0}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/36}" class="main0">${largePound1}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/36}" class="main0">${largePound2}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/36}" class="main0">${largePoundStrings[1]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
   }
 
-  //const largePound0 = "###";
-  //const largePound1 = "#";
-  //const largePound2 = "###";
+  const smallPoundStrings = getSmallPounds(processedWalletData.non_dao, isConnected);
 
-  //svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/6 + ydimension/36}" class="main0">${largePound0}</text>`);
-  //svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/36}" class="main0">${largePound1}</text>`);
-  //svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/36}" class="main0">${largePound2}</text>`);
-
-  //Sets the main1 text - the Non-DAO hash # characters
-  //Number of strings depends on the number of Non-DAO hashes owned
-  //If number of Non-DAO hashes owned exceeds 20 then only 20 are shown regardless
-  //All of this messy logic to deal with the display of the pound signs
-  if (processedWalletData.non_dao < 10) {
-
-    var smallPound0 = "";
-
-    for (let k = 0; k < processedWalletData.non_dao; k++) {
-
-      smallPound0 = smallPound0.concat("#");
-    }
+  if (smallPoundStrings.length == 1) {
 
     //Sets the single line of pounds
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPound0}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPoundStrings[0]}</text>`);
   }
-  if ((processedWalletData.non_dao >= 10) && (processedWalletData.non_dao < 21)) {
-
-    var smallPound0 = "";
-    var smallPound1 = "";
-
-    if (processedWalletData.non_dao == 10) {
-
-      smallPound0 = "#####";
-      smallPound1 = "#####";
-    }
-    if (processedWalletData.non_dao == 11) {
-
-      smallPound0 = "######";
-      smallPound1 = "#####";
-    }
-    if (processedWalletData.non_dao == 12) {
-
-      smallPound0 = "######";
-      smallPound1 = "######";
-    }
-    if (processedWalletData.non_dao == 13) {
-
-      smallPound0 = "#######";
-      smallPound1 = "######";
-    }
-    if (processedWalletData.non_dao == 14) {
-
-      smallPound0 = "#######";
-      smallPound1 = "#######";
-    }
-    if (processedWalletData.non_dao == 15) {
-
-      smallPound0 = "########";
-      smallPound1 = "#######";
-    }
-    if (processedWalletData.non_dao == 16) {
-
-      smallPound0 = "########";
-      smallPound1 = "########";
-    }
-    if (processedWalletData.non_dao == 17) {
-
-      smallPound0 = "#########";
-      smallPound1 = "########";
-    }
-    if (processedWalletData.non_dao == 18) {
-
-      smallPound0 = "########";
-      smallPound1 = "########";
-    }
-    if (processedWalletData.non_dao == 19) {
-
-      smallPound0 = "##########";
-      smallPound1 = "#########";
-    }
-    if (processedWalletData.non_dao >= 20) {
-
-      smallPound0 = "##########";
-      smallPound1 = "##########";
-    }
+  if (smallPoundStrings.length == 2) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPound0}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPound1}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
   }
-  //const smallPound0 = "##########";
-  //const smallPound1 = "##########";
-
-  //svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPound0}</text>`);
-  //svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPound1}</text>`);
 
   //Supporting Text
-
-  //ydimension - (ydimension/36)
 
   //Sets the support0 text - the token Id of the hashes NFT used to mint - made bold
   svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 4 * (ydimension/36)}" font-weight="bold" class="support0">${HashesID}</text>`);
@@ -471,6 +685,10 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
   //Encodes and returns - now readable as a URL
   return Buffer.from(svgHTML).toString('base64');
 }
+
+///////////
+//The API//
+///////////
 
 //Sigil V0 Collection token Id as input
 //Returns the json metadata in the Opensea format
