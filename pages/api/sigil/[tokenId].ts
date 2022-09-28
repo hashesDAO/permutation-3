@@ -27,7 +27,7 @@ type ColourPalette = {
 
 type FontData = {
   font: string
-  fontsize: string
+  fontsize: string[]
 }
 
 /////////////////////////////////
@@ -139,16 +139,6 @@ function processWalletAPIData(data: any): ProcessedWalletData {
 //The SVG Helper Functions//
 ////////////////////////////
 
-//Not sure I need this - Yeah I think I don't
-function isOwnerMinter(owner: string, minter: string): boolean {
-  if(owner === minter) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
 //Returns a true if owner of sigil also owns the Hashes hash used to mint the sigil
 function isConnected(ownerOfSigil:string, ownerOfMintingHash: string): boolean {
   if(ownerOfSigil === ownerOfMintingHash) {
@@ -212,12 +202,48 @@ function getColoursUsed(seed: number, daohashes: number, nondaohashes: number): 
   return coloursUsed;
 }
 
-//Needs updating !!!
-function getFont(seed: number): string {
+//Gets the font data given the seed
+function getFont(seed: number, votes: number, proposals: number, isconnected: boolean): FontData {
 
-  const fonts = ["Ropa+Sans", "Courier Prime", "Oswald", "Poppins", "Roboto Condensed", "Montserrat", "Bebas Neue", "Prompt", "Space Grotesque", "Righteous", "Archivo Black", "Tavaraj", "Gruppo", "Linden Hill"];
+  //The fonts - some font size changes are necessary to prevent text overlap
+  var RopaSans = {font: "Ropa Sans", fontsize: ["80", "20"]} as FontData;
+  var CourierPrime = {font: "Courier Prime", fontsize: ["80", "20"]} as FontData;
+  var Oswald = {font: "Oswald", fontsize: ["70", "16"]} as FontData;
+  var Poppins = {font: "Poppins", fontsize: ["76", "18"]} as FontData;
+  var RobotoCondensed = {font: "Roboto Condensed", fontsize: ["80", "20"]} as FontData;
+  var Montserrat = {font: "Montserrat", fontsize: ["80", "20"]} as FontData;
+  var BebasNeue = {font: "Bebas Neue", fontsize: ["80", "20"]} as FontData;
+  var Prompt = {font: "Prompt", fontsize: ["80", "20"]} as FontData;
+  var SpaceGrotesk = {font: "Space Grotesk", fontsize: ["80", "20"]} as FontData;
+  var Righteous = {font: "Righteous", fontsize: ["90", "26"]} as FontData;
+  var ArchivoBlack = {font: "Archivo Black", fontsize: ["80", "20"]} as FontData;
+  var Taviraj = {font: "Taviraj", fontsize: ["80", "20"]} as FontData;
+  var Gruppo = {font: "Gruppo", fontsize: ["90", "26"]} as FontData;
+  var LindenHill = {font: "Linden Hill", fontsize: ["76", "18"]} as FontData;
 
-  return fonts[(seed % fonts.length)];
+  //Have to account for the massive size of votes and proposals also
+  if (votes > 0 || proposals > 0 || isconnected == false) {
+    RopaSans = {font: "Ropa Sans", fontsize: ["50", "20"]} as FontData;
+    CourierPrime = {font: "Courier Prime", fontsize: ["50", "20"]} as FontData;
+    Oswald = {font: "Oswald", fontsize: ["50", "16"]} as FontData;
+    Poppins = {font: "Poppins", fontsize: ["50", "18"]} as FontData;
+    RobotoCondensed = {font: "Roboto Condensed", fontsize: ["50", "20"]} as FontData;
+    Montserrat = {font: "Montserrat", fontsize: ["50", "20"]} as FontData;
+    BebasNeue = {font: "Bebas Neue", fontsize: ["50", "20"]} as FontData;
+    Prompt = {font: "Prompt", fontsize: ["50", "20"]} as FontData;
+    SpaceGrotesk = {font: "Space Grotesk", fontsize: ["50", "20"]} as FontData;
+    Righteous = {font: "Righteous", fontsize: ["50", "26"]} as FontData;
+    ArchivoBlack = {font: "Archivo Black", fontsize: ["50", "20"]} as FontData;
+    Taviraj = {font: "Taviraj", fontsize: ["50", "20"]} as FontData;
+    Gruppo = {font: "Gruppo", fontsize: ["50", "26"]} as FontData;
+    LindenHill = {font: "Linden Hill", fontsize: ["50", "18"]} as FontData;
+  }
+
+  const fonts = [RopaSans, CourierPrime, Oswald, Poppins, RobotoCondensed, Montserrat, BebasNeue, Prompt, SpaceGrotesk, Righteous, ArchivoBlack, Taviraj, Gruppo, LindenHill];
+
+  //return fonts[(seed % fonts.length)];
+
+  return CourierPrime;
 }
 
 //Gets the phrase - cut down if it's too long
@@ -364,9 +390,10 @@ function getLargePounds(daohashes: number, snapshotvoter: number, snapshotpropos
   }
 
   //Else returns whale
-  return ["(__-){"];
+  return ["(_-){"];
 }
 
+//Gets the output for the small pounds data displayed
 function getSmallPounds(nondaohashes: number, isConnected: boolean): string[] {
 
   //defines the symbol
@@ -574,7 +601,7 @@ function getSmallPounds(nondaohashes: number, isConnected: boolean): string[] {
   }
   
   //Else returns whale
-  return [".___."];
+  return ["._."];
 }
 
 ////////////////////////////////
@@ -597,8 +624,8 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
   const coloursUsed = getColoursUsed(seed, processedWalletData.dao, processedWalletData.non_dao);
 
   //Gets the font given the random seed
-  //Also needs to be amenable to snapshot variables
-  const font = getFont(seed);
+  //const font = getFont(seed, processedWalletData.votes, processedWalletData.proposals, isConnected);
+  const font = getFont(seed, 1, 1, true);
 
   //Hashes Id that minted the sigil
   const HashesID = `Token ID: ${hashesTokenId}`;
@@ -612,13 +639,13 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
   //Styles
 
   //Importing the fonts
-  svgHTML = svgHTML.concat(`<defs><style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesque|Righteous|Archivo+Black|Tavaraj|Gruppo|Linden+Hill');</style></defs>`);
+  svgHTML = svgHTML.concat(`<defs><style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesk|Righteous|Archivo+Black|Taviraj|Gruppo|Linden+Hill');</style></defs>`);
 
   //Sets the main0 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font}; font-size: 80px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font.font}; font-size: ${font.fontsize[0]}px; text-anchor: middle }</style>`);
 
   //Sets the main1 font style: colour, font, and font size
-  svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font}; font-size: 20px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font.font}; font-size: ${font.fontsize[1]}px; text-anchor: middle }</style>`);
 
   //Sets the support0 font style: colour, font, and font size
   svgHTML = svgHTML.concat(`<style>.support0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 10px; text-anchor: middle }</style>`);
@@ -633,7 +660,11 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   //Main Text
 
-  const largePoundStrings = getLargePounds(processedWalletData.dao, processedWalletData.votes, processedWalletData.proposals, isConnected);
+  //const largePoundStrings = getLargePounds(processedWalletData.dao, processedWalletData.votes, processedWalletData.proposals, isConnected);
+
+  const largePoundStrings = getLargePounds(8, 1, 0, true);
+
+  const smallPoundStrings = getSmallPounds(18, true);
 
   if (largePoundStrings.length == 1) {
 
@@ -654,18 +685,18 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
   }
 
-  const smallPoundStrings = getSmallPounds(processedWalletData.non_dao, isConnected);
+  //const smallPoundStrings = getSmallPounds(processedWalletData.non_dao, isConnected);
 
   if (smallPoundStrings.length == 1) {
 
     //Sets the single line of pounds
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
   }
   if (smallPoundStrings.length == 2) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12}" class="main1">${smallPoundStrings[0]}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + 2 * ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
   }
 
   //Supporting Text
@@ -724,12 +755,6 @@ export default async function handler(req: any, res: any) {
   //Converts to base 10
   const hashesTokenId = parseInt(rawHashesTokenId, 16);
 
-  //Not sure I need this actually?
-  //Also gets the minting address
-  const minter = tokenIdEvent?.args?.minter;
-  //Checks if minter is still the owner
-  const isMinter = isOwnerMinter(owner, minter);
-
   //Also gets the current owner of the minting Hashes NFT
   const ownerOfMintingHash = await hashesContract.ownerOf(hashesTokenId);
   //Boolean whether or not the owner of the sigil is also the owner of the Hashes NFT that was used to mint
@@ -754,13 +779,13 @@ export default async function handler(req: any, res: any) {
 
   //Returns NFT data in Opensea format
   res.status(200).json({
-    name: `Sigil #${tokenId}`,
+    name: `Sigil: V0-#${tokenId}`,
     description: 'TODO',
     image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
     attributes: [
         {
           trait_type: 'Font',
-          value: getFont(seed),
+          value: getFont(seed, processedWalletData.votes, processedWalletData.proposals, isSigilConnected).font,
         },
         {
           trait_type: 'Colour Palette',

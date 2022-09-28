@@ -82,8 +82,8 @@ export default async function handler(
     const tokenIdEvent = allGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
 
     const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
-      const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
-      const type = getHashType(tokenId, isDeactivated);
+    const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
+    const type = getHashType(tokenId, isDeactivated);
 
     hashes.push({
       hash_value: hash,
