@@ -258,14 +258,14 @@ function getPhrase(phrase: string): string {
     return "";
   }
 
-  if (phrase.length < 72) {
+  if (phrase.length < 68) {
     return phrase;
   }
   //Cut to prevent excessively long string
   else {
     var tempPhrase = "";
     
-    tempPhrase = phrase.slice(0,72);
+    tempPhrase = phrase.slice(0,68);
 
     tempPhrase = tempPhrase.concat("...");
 
