@@ -159,7 +159,7 @@ function isConnected(ownerOfSigil:string, ownerOfMintingHash: string): boolean {
 //Gets the colour palette given the seed and whether or not the sigil is connected to the minting hash
 function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
 
-  const mono = {name: "Mono", colours: ["#080808", "#222222", "#616161", "#aaaaaa", "#ececec"]} as ColourPalette;
+  const mono = {name: "Mono", colours: ["#080808", "#616161", "#ececec"]} as ColourPalette;
 
   //If sigil is disconnected from minting hashes hash return mono palette
   if (isConnected == false) {
@@ -168,42 +168,82 @@ function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
 
   //The other palettes
   const tyler = {name: "Tyler", colours: ["#d12a2f", "#315f8c", "#3b2b20", "#b8d9ce", "#ebe4d8"]} as ColourPalette;
-  const kevin = {name: "Kevin", colours: ["#f524d7", "#000000", "#303841", "#f1b72c", "#f50f1c"]} as ColourPalette;
-  const x = {name: "X", colours: ["#050615", "#9ae8af", "#7138ca", "#f34ca2", "#3a1e6d"]} as ColourPalette;
   const sol = {name: "Sol", colours: ["#332f2a", "#e40643", "#ffce04", "#0167a4", "#f0efe7"]} as ColourPalette;
-  const herbert = {name: "Herbert", colours: ["#4d334e", "#df327c", "#7b1a45", "#88ffff", "#f2ffff"]} as ColourPalette;
+  const x = {name: "X", colours: ["#050615", "#9ae8af", "#7138ca", "#f34ca2", "#3a1e6d"]} as ColourPalette;
   const rhea = {name: "Rhea", colours: ["#012041", "#6001c0", "#4060c1", "#a1e101", "#e0a17f"]} as ColourPalette;
   const OP6334 = {name: "Open palette 6334", colours: ["#339911", "#ddbbbb", "#0044ff", "#ddee11", "#ddffff"]} as ColourPalette;
   const VPJ = {name: "Vitalik's pyjamas", colours: ["#ff534d", "#9d0107", "#a54100", "#ffc8ae", "#bfa7a1"]} as ColourPalette;
+  const kevin = {name: "Kevin", colours: ["#000000", "#ff0020", "#ffffff", "#0208fa", "#05e600"]} as ColourPalette;
+  const herbert = {name: "Herbert", colours: ["#213693", "#ba2688", "#28aadb", "#eed027", "#c92722"]} as ColourPalette;
+  const casey = {name: "Casey", colours: ["#333d47", "#0671a5", "#ad3a15", "#d3cfc3", "#ece8dc"]} as ColourPalette;
+  const loren = {name: "Loren", colours: ["#202421", "#26686b", "#f0f435", "#ea212d", "#dde1de"]} as ColourPalette;
+  const punk = {name: "Punk #5822", colours: ["#000000", "#75bdbd", "#c8fbfb", "#8e6fb6", "#1637a4"]} as ColourPalette;
 
-  const standardPalettes = [tyler, kevin, x, sol, herbert, rhea, OP6334];
+  //handling rarities
+  //A randomised number between 0 and 99 based on the seed
+  const randomNumber = seed % 100;
 
-  //~3% chance of getting Vitalik's PJs
-  if (seed % 33 == 0) {
+  //Runs through each of the protential colour palettes given their probabilities
+  //Tyler: 11%
+  if (randomNumber <= 10) {
+    return tyler;
+  }
+  //Sol: 11%
+  if ((randomNumber > 10) && (randomNumber <= 21)) {
+    return sol;
+  }
+  //Xcopy: 9%
+  if ((randomNumber > 21) && (randomNumber <= 30)) {
+    return x;
+  }
+  //Rhea: 7%
+  if ((randomNumber > 30) && (randomNumber <= 37)) {
+    return rhea;
+  }
+  //OP6334: 5%
+  if ((randomNumber > 37) && (randomNumber <= 42)) {
+    return OP6334;
+  }
+  //Vitalik's PJs: 3%
+  if ((randomNumber > 42) && (randomNumber <= 45)) {
     return VPJ;
   }
-  //else a uniform chance of getting any other standard pallette
-  else {
-    return standardPalettes[(seed % standardPalettes.length)];
+  //Kevin: 11%
+  if ((randomNumber > 45) && (randomNumber <= 56)) {
+    return kevin;
   }
-
-  //There is a slight probability collision given the multiples of 33 and 7 but whatever, it's not a big deal
+  //Herbert: 11%
+  if ((randomNumber > 56) && (randomNumber <= 67)) {
+    return herbert;
+  }
+  //Casey: 11%
+  if ((randomNumber > 67) && (randomNumber <= 78)) {
+    return casey;
+  }
+  //Loren: 11%
+  if ((randomNumber > 78) && (randomNumber <= 89)) {
+    return loren;
+  }
+  //Punk: 10%
+  else {
+    return punk;
+  }
 }
 
 //Gets the colours used - updates with the number of hashes owned
-function getColoursUsed(seed: number, daohashes: number, nondaohashes: number): number[] {
+function getColoursUsed(seed: number, daohashes: number, nondaohashes: number, colourslength: number): number[] {
 
   const coloursUsed = [0,1];
 
   //Background colour dependent on total number of hashes owned
-  coloursUsed[0] = (daohashes + nondaohashes) % 5;
+  coloursUsed[0] = (daohashes + nondaohashes) % colourslength;
 
   //Text colour dependent on total number of hashes owned + seed
-  coloursUsed[1] = (seed + daohashes + nondaohashes) % 5;
+  coloursUsed[1] = (seed + daohashes + nondaohashes) % colourslength;
 
   //makes sure the same colours aren't used
   if (coloursUsed[0] == coloursUsed[1]) {
-    coloursUsed[1] = (coloursUsed[1] + 1) % 5;
+    coloursUsed[1] = (coloursUsed[1] + 1) % colourslength;
   }
 
   return coloursUsed;
@@ -258,14 +298,14 @@ function getPhrase(phrase: string): string {
     return "";
   }
 
-  if (phrase.length < 68) {
+  if (phrase.length < 62) {
     return phrase;
   }
   //Cut to prevent excessively long string
   else {
     var tempPhrase = "";
     
-    tempPhrase = phrase.slice(0,68);
+    tempPhrase = phrase.slice(0,62);
 
     tempPhrase = tempPhrase.concat("...");
 
@@ -291,7 +331,7 @@ function getLargePounds(daohashes: number, snapshotvoter: number, snapshotpropos
 
   //If disconnected return a single string of NULL
   if (isConnected == false) {
-    return ["NULL"];
+    return ["NUL"];
   }
 
   //Then runs through the potential possible arrangements from nothing to whale
@@ -624,7 +664,7 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   //The two colours used: dependent on the number of dao and non-dao hashes owned in the wallet
   //0: background colour, 1: font colour
-  const coloursUsed = getColoursUsed(seed, processedWalletData.dao, processedWalletData.non_dao);
+  const coloursUsed = getColoursUsed(seed, processedWalletData.dao, processedWalletData.non_dao, colourPalette.colours.length);
 
   //Gets the font given the random seed
   const font = getFont(seed, processedWalletData.votes, processedWalletData.proposals, isConnected);
@@ -666,20 +706,20 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
   if (largePoundStrings.length == 1) {
 
     //Sets the single line of pounds
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3}" class="main0">${largePoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5}" class="main0">${largePoundStrings[0]}</text>`);
   }
   if (largePoundStrings.length == 2) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/12}" class="main0">${largePoundStrings[0]}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/12}" class="main0">${largePoundStrings[1]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/12}" class="main0">${largePoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/12}" class="main0">${largePoundStrings[1]}</text>`);
   }
   if (largePoundStrings.length == 3) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 - ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[0]}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/36}" class="main0">${largePoundStrings[1]}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/36}" class="main0">${largePoundStrings[1]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
   }
 
   //Supporting Hashes/Icons
@@ -688,13 +728,13 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
   if (smallPoundStrings.length == 1) {
 
     //Sets the single line of pounds
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
   }
   if (smallPoundStrings.length == 2) {
 
     //Sets the multiple pound lines
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
-    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension/3 + ydimension/6 + ydimension/12 + 2 * ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
+    svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + 2 * ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
   }
 
   //Supporting Text
