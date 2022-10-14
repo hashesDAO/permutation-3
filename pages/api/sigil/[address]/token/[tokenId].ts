@@ -220,6 +220,7 @@ export default async function handler(req: any, res: any) {
     res.status(200).json({
       name: `${collectionJSONData.name} #${tokenId}`,
       description: `${collectionJSONData.description}`,
+      animation_url: `https://sigils.com/media/${address}.html?hash==0x123&attributeB=3`, 
       attributes: [
         {
           trait_type: 'Minting Hash Id',
