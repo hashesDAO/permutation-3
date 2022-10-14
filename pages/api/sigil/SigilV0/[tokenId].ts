@@ -1,7 +1,7 @@
-import { getHashesCollectionContract, getHashesContract } from '../../../util';
-import Addresses from '../../../addresses.json';
+import { getHashesCollectionContract, getHashesContract } from '../../../../util';
+import Addresses from '../../../../addresses.json';
 
-//http://localhost:3000/api/sigil
+//http://localhost:3000/api/sigil/{tokenId}
 
 ///////////////
 //The Structs//
@@ -91,6 +91,8 @@ function processWalletAPIData(data: any): ProcessedWalletData {
 
       processedWalletData.dao = 0;
       processedWalletData.non_dao = 0;
+      processedWalletData.votes = 0;
+      processedWalletData.proposals = 0;
     }
     else {
 
@@ -110,23 +112,16 @@ function processWalletAPIData(data: any): ProcessedWalletData {
 
       processedWalletData.dao = dao;
       processedWalletData.non_dao = non_dao;
-    }
-  } catch (error) {
-    console.error(`error transposing wallet data: dao/non-dao : ${error}`);
-  }
-
-  try {
-    //WalletData will return an undefined if the owner does not own any Hashes NFTs
-    if (data === undefined) {
-      processedWalletData.votes = 0;
-      processedWalletData.proposals = 0;
-    }
-    else {
       processedWalletData.votes = data.on_chain_votes;
-      processedWalletData.proposals = data.proposals_created;
+
+      if (data.proposals_created === undefined) {
+        processedWalletData.proposals = 0;
+      } else {
+        processedWalletData.proposals = data.proposals_created;
+      }
     }
   } catch (error) {
-    console.error(`error transposing wallet data: snapshot data ${error}`);
+    console.error(`error transposing wallet data: ${error}`);
   }
 
   return processedWalletData;
@@ -774,6 +769,16 @@ export default async function handler(req: any, res: any) {
 
   //Sigils collection address
   const sigilV0Contract = getHashesCollectionContract(Addresses.sigilV0CollectionAddress_currentlyMedleyLimited);
+
+  //Gets the supply of the collection
+  const getTotalSupply = await sigilV0Contract.totalSupply();
+  const rawTotalSupply = getTotalSupply._hex;
+  const totalSupply = parseInt(rawTotalSupply, 16);
+
+  if (tokenId >= totalSupply) {
+    res.status(400).send('invalid token Id');
+    return;
+  }
 
   //Hashes address
   const hashesContract = getHashesContract(1);
