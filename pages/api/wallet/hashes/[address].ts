@@ -59,7 +59,7 @@ export default async function handler(
   }
 
   try {
-    const etherscanProvider = new ethers.providers.EtherscanProvider(1, "6D3QHI3IBE1BQGAPQGC2N5N4NUEB3PW2MX");
+    const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
     const currentBlockNumber = await etherscanProvider.getBlockNumber();
 
     const hashes: WalletHash[] = [];
