@@ -34,7 +34,7 @@ type ProcessedWalletData = {
 //Gets the Token Hashes data from pre-existing API
 async function getTokenAPIData(tokenId: number) {
   try {
-    const APIdata = await fetch(`http://permutation-3.vercel.app/api/tokenId/${tokenId}`);
+    const APIdata = await fetch(`http://localhost:3000/api/tokenId/${tokenId}`);
 
     const data = await APIdata.json();
 
@@ -71,7 +71,7 @@ function processTokenAPIData(data: any): ProcessedTokenData {
 async function getWalletAPIData(address: string) {
   try {
 
-    const APIdata = await fetch(`http://permutation-3.vercel.app/api/wallet/hashes/${address}`);
+    const APIdata = await fetch(`http://localhost:3000/api/wallet/hashes/${address}`);
 
     const data = await APIdata.json();
 

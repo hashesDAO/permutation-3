@@ -28,7 +28,7 @@ export default async function handler(
   }
 
   try {
-    const hashesContract = getHashesContract(1);
+    const hashesContract = getHashesContract(5);
     const hashesCount = await getHashesCount(hashesContract, address);
 
     if (hashesCount instanceof Error) {
@@ -41,7 +41,7 @@ export default async function handler(
       return;
     }
 
-    const etherscanProvider = new ethers.providers.EtherscanProvider(1, process.env.ETHERSCAN_API_KEY);
+    const etherscanProvider = new ethers.providers.EtherscanProvider(5, process.env.ETHERSCAN_API_KEY);
 
     const [
       balance,
