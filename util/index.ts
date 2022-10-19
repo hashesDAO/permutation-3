@@ -53,7 +53,7 @@ export function getHashesDAOContract(): ethers.Contract {
 
 export function getHashesCollectionContract(address: string): ethers.Contract {
   const chainId = 5; //temp
-  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[1]);
+  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[5]);
   const hashesCollectionContract = CollectionNFTCloneableV1__factory.connect(
     address,
     provider
