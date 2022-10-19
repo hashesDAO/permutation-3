@@ -81,7 +81,7 @@ export default async function handler(
     return;
   }
 
-  const hashesContract = getHashesContract(1);
+  const hashesContract = getHashesContract(5);
 
   try {
     const nonce = await hashesContract.nonce();
