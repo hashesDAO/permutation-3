@@ -36,7 +36,7 @@ type FontData = {
 //Gets the Token Hashes data from pre-existing API
 async function getTokenAPIData(tokenId: number) {
   try {
-    const APIdata = await fetch(`https://permutation-3-dntnvsl6q-hashesdao.vercel.app/api/tokenId/${tokenId}`);
+    const APIdata = await fetch(`https://permutation-3-l49ltgmwh-hashesdao.vercel.app/api/tokenId/${tokenId}`);
 
     const data = await APIdata.json();
 
@@ -69,7 +69,7 @@ function processTokenAPIData(data: any): ProcessedTokenData {
 async function getWalletAPIData(address: string) {
   try {
 
-    const APIdata = await fetch(`https://permutation-3-dntnvsl6q-hashesdao.vercel.app/api/wallet/hashes/${address}`);
+    const APIdata = await fetch(`https://permutation-3-l49ltgmwh-hashesdao.vercel.app/api/wallet/hashes/${address}`);
 
     const data = await APIdata.json();
 
@@ -330,6 +330,7 @@ function getLargePounds(daohashes: number, snapshotvoter: number, snapshotpropos
   }
 
   //Then runs through the potential possible arrangements from nothing to whale
+  console.log(daohashes);
 
   if (daohashes == 0) {
     return [""];
