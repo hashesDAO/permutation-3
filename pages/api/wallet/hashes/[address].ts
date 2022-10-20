@@ -100,7 +100,6 @@ export default async function handler(
       .map(hash => hash.token_id);
 
     if (hashesNotMinted.length) {
-
       const transferFilter = hashesContract.filters.Transfer();
       const allTransferEvents = await hashesContract.queryFilter(transferFilter);
       const transferEventsToAddress = allTransferEvents
