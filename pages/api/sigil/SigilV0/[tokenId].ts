@@ -64,33 +64,26 @@ type attribute= {
 
 async function getTokenAPIData(tokenId: number) {
   try {
-
     const apiData = await fetch(`http://permutation-3.vercel.app/api/tokenId/${tokenId}`);
 
     return await apiData.json();
-
   } catch (error) {
     console.error(`error calling API for tokenID data: ${error}`);
   }
 }
 
 function processTokenAPIData(data: TokenResponseData): ProcessedTokenData {
-
-  const processTokenAPIData: ProcessedTokenData  = ({
+  return {
     hash : data.hash, 
     phrase_value : data.phrase_value
-  })
-
-  return processTokenAPIData;
+  };
 }
 
 async function getWalletAPIData(address: string) {
   try {
-
     const APIdata = await fetch(`http://permutation-3.vercel.app/api/wallet/hashes/${address}`);
-    
-    return await APIdata.json();
-
+    const response = await APIdata.json();
+    return response;
   } catch (error) {
     console.error(`error calling API for Wallet data: ${error}`);
   }
