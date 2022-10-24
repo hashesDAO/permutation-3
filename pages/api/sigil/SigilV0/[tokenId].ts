@@ -1,11 +1,32 @@
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { getHashesCollectionContract, getHashesContract } from '../../../../util';
+import { hashType } from '../../../../util/validate';
 import Addresses from '../../../../addresses.json';
 
-//http://localhost:3000/api/sigil/{tokenId}
+type TokenResponseData = {
+  hash: string
+  binary_value: string
+  binary_attributes: BinaryAttribute[]
+  type: hashType
+  phrase_value: string
+  phrase_attributes: BinaryAttribute[]
+};
 
-///////////////
-//The Structs//
-///////////////
+type WalletHash = {
+  hash_value: string
+  type: hashType
+  minted_by_address: boolean
+  blocks_held: number
+  purchased_above_mint_price: boolean | null
+  token_id: number
+}
+
+type WalletHashResponseData = {
+  hashes: WalletHash[]
+  on_chain_votes: number
+  proposals_created: number
+  owns_perm_2_nft: boolean
+};
 
 type ProcessedTokenData = {
   hash: string
@@ -22,106 +43,83 @@ type ProcessedWalletData = {
 type ColourPalette = {
   name: string
   colours: string[]
-}
+};
 
 type FontData = {
   font: string
   fontsize: string[]
-}
+};
 
-/////////////////////////////////
-//The Data Collection Functions//
-/////////////////////////////////
+type ResponseMetadata = {
+  name: string
+  description: string
+  image: string
+  attributes: attribute[]
+};
 
-//Gets the Token Hashes data from pre-existing API
+type attribute= {
+  trait_type: string
+  value: string | number
+};
+
 async function getTokenAPIData(tokenId: number) {
   try {
-    const APIdata = await fetch(`https://permutation-3-l49ltgmwh-hashesdao.vercel.app/api/tokenId/${tokenId}`);
+    const apiData = await fetch(`http://permutation-3.vercel.app/api/tokenId/${tokenId}`);
 
-    const data = await APIdata.json();
-
-    return data;
-
+    return await apiData.json();
   } catch (error) {
     console.error(`error calling API for tokenID data: ${error}`);
   }
 }
 
-//Returns processed data for easy use when constucting the NFT
-function processTokenAPIData(data: any): ProcessedTokenData {
-
-  const processedTokenData = {} as ProcessedTokenData;
-
-  try {
-
-    processedTokenData.hash = data.hash;
-
-    processedTokenData.phrase_value = data.phrase_value;
-
-  } catch (error) {
-    console.error(`error transposing token data: ${error}`);
-  }
-
-  return processedTokenData;
+function processTokenAPIData(data: TokenResponseData): ProcessedTokenData {
+  return {
+    hash : data.hash, 
+    phrase_value : data.phrase_value
+  };
 }
 
-//Gets the Wallet Hashes data from pre-existing API
 async function getWalletAPIData(address: string) {
   try {
-
-    const APIdata = await fetch(`https://permutation-3-l49ltgmwh-hashesdao.vercel.app/api/wallet/hashes/${address}`);
-
-    const data = await APIdata.json();
-
-    return data;
-
+    const APIdata = await fetch(`http://permutation-3.vercel.app/api/wallet/hashes/${address}`);
+    const response = await APIdata.json();
+    return response;
   } catch (error) {
     console.error(`error calling API for Wallet data: ${error}`);
   }
 }
 
-//Returns processed data for easy use when constucting the NFT
-function processWalletAPIData(data: any): ProcessedWalletData {
+function processWalletAPIData(data: WalletHashResponseData): ProcessedWalletData {
 
   const processedWalletData = {} as ProcessedWalletData;
 
-  try {
-    //WalletData will return an undefined if the owner does not own any Hashes NFTs
-    if (data === undefined) {
+  if (!data) {
 
-      processedWalletData.dao = 0;
-      processedWalletData.non_dao = 0;
-      processedWalletData.votes = 0;
-      processedWalletData.proposals = 0;
-    }
-    else {
+    processedWalletData.dao = 0;
+    processedWalletData.non_dao = 0;
+    processedWalletData.votes = 0;
+    processedWalletData.proposals = 0;
+  }
+  else {
 
-      var dao = 0;
-      var non_dao = 0;
+    let dao = 0;
+    let non_dao = 0;
 
-      for (let i = 0; i < data.hashes.length; i++) {
+    for (let i = 0; i < data.hashes.length; i++) {
 
-        //Adds entry to either DAO or non-DAO increment
-        if (data.hashes[i].type === "DAO") {
-          dao += 1;
-        }
-        else {
-          non_dao += 1;
-        }
+      if (data.hashes[i].type === "DAO") {
+        dao += 1;
       }
-
-      processedWalletData.dao = dao;
-      processedWalletData.non_dao = non_dao;
-      processedWalletData.votes = data.on_chain_votes;
-
-      if (data.proposals_created === undefined) {
-        processedWalletData.proposals = 0;
-      } else {
-        processedWalletData.proposals = data.proposals_created;
+      else {
+        non_dao += 1;
       }
     }
-  } catch (error) {
-    console.error(`error transposing wallet data: ${error}`);
+
+    processedWalletData.dao = dao;
+    processedWalletData.non_dao = non_dao;
+    processedWalletData.votes = data.on_chain_votes;
+
+    processedWalletData.proposals = !data.proposals_created ? 0 : data.proposals_created;
   }
 
   return processedWalletData;
@@ -137,11 +135,6 @@ function getMintingHashesType(tokenId: number): string {
   }
 }
 
-////////////////////////////
-//The SVG Helper Functions//
-////////////////////////////
-
-//Returns a true if owner of sigil also owns the Hashes hash used to mint the sigil
 function isConnected(ownerOfSigil:string, ownerOfMintingHash: string): boolean {
   if(ownerOfSigil === ownerOfMintingHash) {
     return true;
@@ -151,17 +144,14 @@ function isConnected(ownerOfSigil:string, ownerOfMintingHash: string): boolean {
   }
 }
 
-//Gets the colour palette given the seed and whether or not the sigil is connected to the minting hash
 function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
 
   const mono = {name: "Mono", colours: ["#080808", "#616161", "#ececec"]} as ColourPalette;
 
-  //If sigil is disconnected from minting hashes hash return mono palette
   if (isConnected == false) {
     return mono;
   }
 
-  //The other palettes
   const tyler = {name: "Tyler", colours: ["#d12a2f", "#315f8c", "#3b2b20", "#b8d9ce", "#ebe4d8"]} as ColourPalette;
   const sol = {name: "Sol", colours: ["#332f2a", "#e40643", "#ffce04", "#0167a4", "#f0efe7"]} as ColourPalette;
   const x = {name: "X", colours: ["#050615", "#9ae8af", "#7138ca", "#f34ca2", "#3a1e6d"]} as ColourPalette;
@@ -175,7 +165,6 @@ function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
   const punk = {name: "Punk #5822", colours: ["#000000", "#75bdbd", "#c8fbfb", "#8e6fb6", "#1637a4"]} as ColourPalette;
 
   //handling rarities
-  //A randomised number between 0 and 99 based on the seed
   const randomNumber = seed % 100;
 
   //Runs through each of the protential colour palettes given their probabilities
@@ -225,18 +214,14 @@ function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
   }
 }
 
-//Gets the colours used - updates with the number of hashes owned
 function getColoursUsed(seed: number, daohashes: number, nondaohashes: number, colourslength: number): number[] {
 
   const coloursUsed = [0,1];
 
-  //Background colour dependent on total number of hashes owned
   coloursUsed[0] = (daohashes + nondaohashes) % colourslength;
 
-  //Text colour dependent on total number of hashes owned + seed
   coloursUsed[1] = (seed + daohashes + nondaohashes) % colourslength;
 
-  //makes sure the same colours aren't used
   if (coloursUsed[0] == coloursUsed[1]) {
     coloursUsed[1] = (coloursUsed[1] + 1) % colourslength;
   }
@@ -244,10 +229,8 @@ function getColoursUsed(seed: number, daohashes: number, nondaohashes: number, c
   return coloursUsed;
 }
 
-//Gets the font data given the seed
 function getFont(seed: number, votes: number, proposals: number, isconnected: boolean): FontData {
 
-  //The fonts - some font size changes are necessary to prevent text overlap
   var RopaSans = {font: "Ropa Sans", fontsize: ["80", "20"]} as FontData;
   var CourierPrime = {font: "Courier Prime", fontsize: ["80", "20"]} as FontData;
   var Oswald = {font: "Oswald", fontsize: ["70", "16"]} as FontData;
@@ -263,7 +246,6 @@ function getFont(seed: number, votes: number, proposals: number, isconnected: bo
   var Gruppo = {font: "Gruppo", fontsize: ["90", "26"]} as FontData;
   var LindenHill = {font: "Linden Hill", fontsize: ["76", "18"]} as FontData;
 
-  //Have to account for the massive size of votes and proposals also
   if (votes > 0 || proposals > 0 || isconnected == false) {
     RopaSans = {font: "Ropa Sans", fontsize: ["52", "20"]} as FontData;
     CourierPrime = {font: "Courier Prime", fontsize: ["50", "20"]} as FontData;
@@ -286,7 +268,6 @@ function getFont(seed: number, votes: number, proposals: number, isconnected: bo
   return fonts[(seed % fonts.length)];
 }
 
-//Gets the phrase - cut down if it's too long
 function getPhrase(phrase: string): string {
 
   if (phrase == null || undefined) {
@@ -296,7 +277,6 @@ function getPhrase(phrase: string): string {
   if (phrase.length < 62) {
     return phrase;
   }
-  //Cut to prevent excessively long string
   else {
     var tempPhrase = "";
     
@@ -308,29 +288,21 @@ function getPhrase(phrase: string): string {
   }
 }
 
-//Gets the output for the large pounds data displayed
 function getLargePounds(daohashes: number, snapshotvoter: number, snapshotproposer: number, isConnected: boolean): string[] {
 
-  //defines the symbol
   var symbol = "#";
 
-  //Changes the symbol of the owner has snapshot voted
   if (snapshotvoter > 0) {
     symbol = "╬";
   }
 
-  //Changes the symbol of the owner has snapshot proposed
   if (snapshotproposer > 0) {
     symbol = "✹";
   }
 
-  //If disconnected return a single string of NULL
   if (isConnected == false) {
     return ["NUL"];
   }
-
-  //Then runs through the potential possible arrangements from nothing to whale
-  console.log(daohashes);
 
   if (daohashes == 0) {
     return [""];
@@ -429,22 +401,16 @@ function getLargePounds(daohashes: number, snapshotvoter: number, snapshotpropos
     return [line0, line1, line2];
   }
 
-  //Else returns whale
   return ["(_-){"];
 }
 
-//Gets the output for the small pounds data displayed
 function getSmallPounds(nondaohashes: number, isConnected: boolean): string[] {
 
-  //defines the symbol
   var symbol = "#";
 
-  //If disconnected return a single string of NULL
   if (isConnected == false) {
     return [""];
   }
-
-  //Then runs through the potential possible arrangements from nothing to whale
 
   if (nondaohashes == 0) {
     return [""];
@@ -640,215 +606,157 @@ function getSmallPounds(nondaohashes: number, isConnected: boolean): string[] {
     return [line0, line1];
   }
   
-  //Else returns whale
   return ["._."];
 }
 
-////////////////////////////////
-//The SVG Constructor Function//
-////////////////////////////////
-
-//Returns the SVG image for the NFT
 function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, seed: number, processedTokenData: ProcessedTokenData, processedWalletData: ProcessedWalletData): string {
 
-  //Size and positioning controlled with these variables
   const xdimension = 260;
   const ydimension = 350;
 
-  //Gets the colour palette given the random seed (i.e. the hashes hash) and whether or not the sigil owner also owns the minting hash
   const colourPalette = getColourPalette(seed, isConnected);
 
-  //The two colours used: dependent on the number of dao and non-dao hashes owned in the wallet
   //0: background colour, 1: font colour
   const coloursUsed = getColoursUsed(seed, processedWalletData.dao, processedWalletData.non_dao, colourPalette.colours.length);
 
-  //Gets the font given the random seed
   const font = getFont(seed, processedWalletData.votes, processedWalletData.proposals, isConnected);
 
-  //Hashes Id that minted the sigil
   const HashesID = `Token ID: ${hashesTokenId}`;
 
-  //The hashes phrase
   const Phrase = getPhrase(processedTokenData.phrase_value);
 
-  //Begins and sets the dimensions
   var svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 ${xdimension} ${ydimension}">`;
 
-  //Styles
-
-  //Importing the fonts
   svgHTML = svgHTML.concat(`<defs><style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesk|Righteous|Archivo+Black|Taviraj|Gruppo|Linden+Hill');</style></defs>`);
 
-  //Sets the main0 font style: colour, font, and font size
   svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font.font}; font-size: ${font.fontsize[0]}px; text-anchor: middle }</style>`);
 
-  //Sets the main1 font style: colour, font, and font size
   svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font.font}; font-size: ${font.fontsize[1]}px; text-anchor: middle }</style>`);
 
-  //Sets the support0 font style: colour, font, and font size
   svgHTML = svgHTML.concat(`<style>.support0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 10px; text-anchor: middle }</style>`);
 
-  //Sets the support1 font style: colour, font, and font size
   svgHTML = svgHTML.concat(`<style>.support1 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 6px; text-anchor: middle }</style>`);
 
-  //Backgound
-
-  //Sets the background colour
   svgHTML = svgHTML.concat(`<rect width="100%" height="100%" fill= "${colourPalette.colours[coloursUsed[0]]}" />`);
 
-  //Main Hashes/Icons
   const largePoundStrings = getLargePounds(processedWalletData.dao, processedWalletData.votes, processedWalletData.proposals, isConnected);
 
   if (largePoundStrings.length == 1) {
 
-    //Sets the single line of pounds
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5}" class="main0">${largePoundStrings[0]}</text>`);
   }
   if (largePoundStrings.length == 2) {
 
-    //Sets the multiple pound lines
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/12}" class="main0">${largePoundStrings[0]}</text>`);
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/12}" class="main0">${largePoundStrings[1]}</text>`);
   }
   if (largePoundStrings.length == 3) {
 
-    //Sets the multiple pound lines
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[0]}</text>`);
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/36}" class="main0">${largePoundStrings[1]}</text>`);
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
   }
 
-  //Supporting Hashes/Icons
   const smallPoundStrings = getSmallPounds(processedWalletData.non_dao, isConnected);
 
   if (smallPoundStrings.length == 1) {
 
-    //Sets the single line of pounds
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
   }
   if (smallPoundStrings.length == 2) {
 
-    //Sets the multiple pound lines
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + ydimension/24}" class="main1">${smallPoundStrings[0]}</text>`);
     svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/12 + 2 * ydimension/24}" class="main1">${smallPoundStrings[1]}</text>`);
   }
 
-  //Supporting Text
-
-  //Sets the support0 text - the token Id of the hashes NFT used to mint - made bold
   svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 4 * (ydimension/36)}" font-weight="bold" class="support0">${HashesID}</text>`);
 
-  //Sets the first support1 text - the hashes phrase
   svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 3 * (ydimension/36)}" class="support1">${Phrase}</text>`);
 
-  //Sets the second support1 text - the hashes hash
   svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 2 * (ydimension/36)}" class="support1">${processedTokenData.hash}</text>`);
 
-  //Ends it and wraps up
   svgHTML = svgHTML.concat(`</svg>`);
   
-  //Encodes and returns - now readable as a URL
   return Buffer.from(svgHTML).toString('base64');
 }
 
-///////////
-//The API//
-///////////
+export default async function handler(req: NextApiRequest, res: NextApiResponse< ResponseMetadata | string>) {
 
-//Sigil V0 Collection token Id as input
-//Returns the json metadata in the Opensea format
-export default async function handler(req: any, res: any) {
-
-  //Sigil Token Id
   const { tokenId } = req.query;
 
-  //Must be a number
   if (isNaN(Number(tokenId))) {
     res.status(400).send('tokenId must be a number');
     return;
   }
 
-  //Sigils collection address
-  const sigilV0Contract = getHashesCollectionContract(Addresses.sigilV0CollectionAddress_currentlyMedleyLimited);
+  const sigilV0Contract = getHashesCollectionContract(Addresses.sigilV0CollectionAddress);
 
-  //Gets the supply of the collection
-  const getTotalSupply = await sigilV0Contract.totalSupply();
-  const rawTotalSupply = getTotalSupply._hex;
-  const totalSupply = parseInt(rawTotalSupply, 16);
+  try {
+    const getTotalSupply = await sigilV0Contract.totalSupply();
+    const rawTotalSupply = getTotalSupply._hex;
+    const totalSupply = parseInt(rawTotalSupply, 16);
 
-  if (tokenId >= totalSupply) {
-    res.status(400).send('invalid token Id');
-    return;
+    if (Number(tokenId) >= totalSupply) {
+      res.status(400).send('invalid token Id');
+      return;
+    }
+  } catch (error) {
+    console.error(`error fetching total supply: ${error}`);
   }
 
-  //Hashes address
-  const hashesContract = getHashesContract(1);
+  try {
+    const hashesContract = getHashesContract(5);
 
-  //Gets the address of the owner of the sigil (tokenId)
-  const owner = await sigilV0Contract.ownerOf(tokenId);
+    const owner = await sigilV0Contract.ownerOf(Number(tokenId));
 
-  //Gets the hashes Id that originally minted the Sigil NFT
-  //Defines the event
-  const mintedFilter = sigilV0Contract.filters.Minted();
-  //Gets all the events
-  const AllGeneratedEvents = await sigilV0Contract.queryFilter(mintedFilter);
-  //Finds the event where the sigil token Id matches the query
-  const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
-  //Gets the raw data (in hexadecimal)
-  const rawHashesTokenId = tokenIdEvent?.args?.hashesTokenId?._hex;
-  //Converts to base 10
-  const hashesTokenId = parseInt(rawHashesTokenId, 16);
+    const mintedFilter = sigilV0Contract.filters.Minted();
+    const AllGeneratedEvents = await sigilV0Contract.queryFilter(mintedFilter);
+    const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+    const rawHashesTokenId = tokenIdEvent?.args?.hashesTokenId?._hex;
+    const hashesTokenId = parseInt(rawHashesTokenId, 16);
 
-  //Parallelised the rest of the data fetching
-  //Gets the current owner of the minting Hashes NFT
-  const ownerOfMintingHash = hashesContract.ownerOf(hashesTokenId);
-  //Gets the relevant token data from pre-existing API
-  const tokenData = getTokenAPIData(hashesTokenId);
-  //Gets the relevant wallet data from pre-existing API
-  const walletData = getWalletAPIData(owner);
+    const ownerOfMintingHash = hashesContract.ownerOf(hashesTokenId);
+    const tokenData = getTokenAPIData(hashesTokenId);
+    const walletData = getWalletAPIData(owner);
 
-  //Fetchs at once
-  const parallelDataFetch = await Promise.all([ownerOfMintingHash, tokenData, walletData]);
+    const parallelDataFetch = await Promise.all([ownerOfMintingHash, tokenData, walletData]);
 
-  //Boolean whether or not the owner of the sigil is also the owner of the Hashes NFT that was used to mint
-  const isSigilConnected = isConnected(owner, parallelDataFetch[0]);
-  //Processes the revelant token (i.e. hashes NFT used to mint) data for easy use
-  const processedTokenData = processTokenAPIData(parallelDataFetch[1]);
-  //Processes the revelant owner data for easy use
-  const processedWalletData = processWalletAPIData(parallelDataFetch[2]);
+    const isSigilConnected = isConnected(owner, parallelDataFetch[0]);
+    const processedTokenData = processTokenAPIData(parallelDataFetch[1]);
+    const processedWalletData = processWalletAPIData(parallelDataFetch[2]);
 
-  //The seed for randomness derived from the hashes NFT hash
-  const seed = Number(processedTokenData.hash);
+    const seed = Number(processedTokenData.hash);
 
-  //Minting Hashes type used in the metadata
-  const mintingHashType = getMintingHashesType(hashesTokenId);
+    const mintingHashType = getMintingHashesType(hashesTokenId);
 
-  //Returns NFT data in Opensea format
-  res.status(200).json({
-    name: `Sigil-V0: #${tokenId}`,
-    description: 'TODO',
-    image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
-    attributes: [
-        {
-          trait_type: 'Font',
-          value: getFont(seed, processedWalletData.votes, processedWalletData.proposals, isSigilConnected).font,
-        },
-        {
-          trait_type: 'Colour Palette',
-          value: getColourPalette(seed, isSigilConnected).name,
-        },
-        {
-          trait_type: 'Minting Hash',
-          value: mintingHashType,
-        },
-        {
-          trait_type: 'Snapshot Votes',
-          value: processedWalletData.votes,
-        },
-        {
-          trait_type: 'Snapshot Proposals',
-          value: processedWalletData.proposals,
-        },
-    ],
-  });
+    res.status(200).json({
+      name: `Sigil-V0: #${tokenId}`,
+      description: 'TODO',
+      image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      attributes: [
+          {
+            trait_type: 'Font',
+            value: getFont(seed, processedWalletData.votes, processedWalletData.proposals, isSigilConnected).font,
+          },
+          {
+            trait_type: 'Colour Palette',
+            value: getColourPalette(seed, isSigilConnected).name,
+          },
+          {
+            trait_type: 'Minting Hash',
+            value: mintingHashType,
+          },
+          {
+            trait_type: 'Snapshot Votes',
+            value: processedWalletData.votes,
+          },
+          {
+            trait_type: 'Snapshot Proposals',
+            value: processedWalletData.proposals,
+          },
+      ],
+    });
+  } catch (error) {
+    console.error(`error fetching metadata: ${error}`);
+  }
 }

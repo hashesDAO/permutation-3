@@ -1,17 +1,32 @@
-import { getHashesCollectionContract, getHashesContract } from '../../../../../util';
-import Collections from './collections.json';
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { getHashesCollectionContract } from '../../../../../util';
 import { isValidAddress, hashType } from '../../../../../util/validate';
+import Collections from './collections.json';
 
-//http://localhost:3000/api/sigil/{address}/token/{tokenId}
-//permutation-3.vercel.app
+type TokenResponseData = {
+  hash: string
+  binary_value: string
+  binary_attributes: BinaryAttribute[]
+  type: hashType
+  phrase_value: string
+  phrase_attributes: BinaryAttribute[]
+};
 
-//To-do:
+type WalletHash = {
+  hash_value: string
+  type: hashType
+  minted_by_address: boolean
+  blocks_held: number
+  purchased_above_mint_price: boolean | null
+  token_id: number
+}
 
-//Custom functions for each of the returned paramaters so that default/customised can be set where necessary
-
-///////////////
-//The Structs//
-///////////////
+type WalletHashResponseData = {
+  hashes: WalletHash[]
+  on_chain_votes: number
+  proposals_created: number
+  owns_perm_2_nft: boolean
+};
 
 type ProcessedTokenData = {
   hash: string
@@ -27,199 +42,152 @@ type ProcessedWalletData = {
   proposals: number
 };
 
-/////////////////////////////////
-//The Data Collection Functions//
-/////////////////////////////////
+type ResponseMetadata = {
+  name: string
+  description: string
+  image: string
+  animation_url: string
+  attributes: attribute[]
+};
 
-//Gets the Token Hashes data from pre-existing API
+type attribute= {
+  trait_type: string
+  value: string | number
+};
+
 async function getTokenAPIData(tokenId: number) {
   try {
-    const APIdata = await fetch(`https://permutation-3-dntnvsl6q-hashesdao.vercel.app/api/tokenId/${tokenId}`);
+    const apiData = await fetch(`http://permutation-3.vercel.app/api/tokenId/${tokenId}`);
 
-    const data = await APIdata.json();
-
-    return data;
-
+    return await apiData.json();
   } catch (error) {
     console.error(`error calling API for tokenID data: ${error}`);
   }
 }
 
-//Returns processed data for easy use when constucting the NFT
-function processTokenAPIData(data: any): ProcessedTokenData {
-
-  const processedTokenData = {} as ProcessedTokenData;
-
-  try {
-
-    processedTokenData.hash = data.hash;
-
-    processedTokenData.phrase_value = data.phrase_value;
-
-    processedTokenData.binary_value = data.binary_value;
-
-    processedTokenData.type = data.type;
-
-  } catch (error) {
-    console.error(`error transposing token data: ${error}`);
-  }
-
-  return processedTokenData;
+function processTokenAPIData(data: TokenResponseData): ProcessedTokenData {
+  return {
+    hash : data.hash, 
+    phrase_value : data.phrase_value, 
+    binary_value : data.binary_value, 
+    type : data.type
+  };
 }
 
-//Gets the Wallet Hashes data from pre-existing API
 async function getWalletAPIData(address: string) {
   try {
-
-    const APIdata = await fetch(`https://permutation-3-dntnvsl6q-hashesdao.vercel.app/api/wallet/hashes/${address}`);
-
-    const data = await APIdata.json();
-
-    return data;
-
+    const APIdata = await fetch(`http://permutation-3.vercel.app/api/wallet/hashes/${address}`);
+    const response = await APIdata.json();
+    return response;
   } catch (error) {
     console.error(`error calling API for Wallet data: ${error}`);
   }
 }
 
-//Returns processed data for easy use when constucting the NFT
-function processWalletAPIData(data: any): ProcessedWalletData {
-
+function processWalletAPIData(data: WalletHashResponseData): ProcessedWalletData {
   const processedWalletData = {} as ProcessedWalletData;
 
-  try {
-    //WalletData will return an undefined if the owner does not own any Hashes NFTs
-    if (data === undefined) {
+  if (!data) {
 
-      processedWalletData.dao = 0;
-      processedWalletData.non_dao = 0;
-      processedWalletData.votes = 0;
-      processedWalletData.proposals = 0;
-    }
-    else {
+    processedWalletData.dao = 0;
+    processedWalletData.non_dao = 0;
+    processedWalletData.votes = 0;
+    processedWalletData.proposals = 0;
+  }
+  else {
 
-      var dao = 0;
-      var non_dao = 0;
+    let dao = 0;
+    let non_dao = 0;
 
-      for (let i = 0; i < data.hashes.length; i++) {
+    for (let i = 0; i < data.hashes.length; i++) {
 
-        //Adds entry to either DAO or non-DAO increment
-        if (data.hashes[i].type === "DAO") {
-          dao += 1;
-        }
-        else {
-          non_dao += 1;
-        }
+      if (data.hashes[i].type === "DAO") {
+        dao += 1;
       }
-
-      processedWalletData.dao = dao;
-      processedWalletData.non_dao = non_dao;
-      processedWalletData.votes = data.on_chain_votes;
-
-      if (data.proposals_created === undefined) {
-        processedWalletData.proposals = 0;
-      } else {
-        processedWalletData.proposals = data.proposals_created;
+      else {
+        non_dao += 1;
       }
     }
-  } catch (error) {
-    console.error(`error transposing wallet data: ${error}`);
+
+    processedWalletData.dao = dao;
+    processedWalletData.non_dao = non_dao;
+    processedWalletData.votes = data.on_chain_votes;
+
+    processedWalletData.proposals = !data.proposals_created ? 0 : data.proposals_created;
   }
 
   return processedWalletData;
 }
 
-//////////////////////////////////////////////
-//Helper Functions For Each Sigil Collection//
-//////////////////////////////////////////////
+export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseMetadata | string>) {
 
-///////////
-//The API//
-///////////
+  const { address } = req.query;
 
-//Returns the json metadata in the Opensea format
-export default async function handler(req: any, res: any) {
+  if (typeof(address) !== 'string') {
+    res.status(400).send('address must be a string');
+    return;
+  }
 
-    //Sigil Collection Address
-    const { address } = req.query;
+  if (!isValidAddress(address)) {
+    res.status(400).send('valid (non-ens) wallet address must be provided');
+    return;
+  }
 
-    if (typeof(address) !== 'string') {
-      res.status(400).send('address must be a string');
-      return;
-    }
-  
-    if (!isValidAddress(address)) {
-      res.status(400).send('valid (non-ens) wallet address must be provided');
-      return;
-    }
+  //////////////////////////////////////////
+  //Try to fetch collection JSON data here//
+  //////////////////////////////////////////
 
-    //////////////////////////////////////////
-    //Try to fetch collection JSON data here//
-    //////////////////////////////////////////
+  //This can be deleted if try-fetch collection is built - will be redundant
+  if(!Collections.hasOwnProperty(address)) {
+    res.status(400).send('sigil collection either does not exist or has not been integrated yet');
+    return;
+  }
 
-    //This can be deleted if try-fetch collection is built - will be redundant
-    if(!Collections.hasOwnProperty(address)) {
-      res.status(400).send('sigil collection either does not exist or has not been integrated yet');
-      return;
-    }
+  //So can this probably
+  const collectionJSONData = Collections[address as keyof typeof Collections];
 
-    //So can this probably
-    const collectionJSONData = Collections[address as keyof typeof Collections];
+  const sigilContract = getHashesCollectionContract(address);
 
-    //Conforms the address into a hashes collection format
-    const sigilContract = getHashesCollectionContract(address);
+  const { tokenId } = req.query;
 
-    //Sigil Token Id given the collection address
-    const { tokenId } = req.query;
-  
-    if (isNaN(Number(tokenId))) {
-      res.status(400).send('tokenId must be a number');
-      return;
-    }
+  if (isNaN(Number(tokenId))) {
+    res.status(400).send('tokenId must be a number');
+    return;
+  }
 
-    //Gets the supply of the collection
+  try {
     const getTotalSupply = await sigilContract.totalSupply();
     const rawTotalSupply = getTotalSupply._hex;
     const totalSupply = parseInt(rawTotalSupply, 16);
 
-    if (tokenId >= totalSupply) {
+    if (Number(tokenId) >= totalSupply) {
       res.status(400).send('invalid token Id');
       return;
     }
+  } catch (error) {
+    console.error(`error fetching total supply: ${error}`);
+  }
 
-    //Gets the address of the owner of the sigil (tokenId)
-    const owner = await sigilContract.ownerOf(tokenId);
-
-    //Gets the hashes Id that originally minted the Sigil NFT
-    //Defines the event
+  try {
+    const owner = await sigilContract.ownerOf(Number(tokenId));
     const mintedFilter = sigilContract.filters.Minted();
-    //Gets all the events
     const AllGeneratedEvents = await sigilContract.queryFilter(mintedFilter);
-    //Finds the event where the sigil token Id matches the query
     const tokenIdEvent = AllGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
-    //Gets the raw data (in hexadecimal)
     const rawHashesTokenId = tokenIdEvent?.args?.hashesTokenId?._hex;
-    //Converts to base 10
     const hashesTokenId = parseInt(rawHashesTokenId, 16);
 
-    //Parallelised the rest of the data fetching
-    //Gets the relevant token data from pre-existing API
     const tokenData = getTokenAPIData(hashesTokenId);
-    //Gets the relevant wallet data from pre-existing API
     const walletData = getWalletAPIData(owner);
 
-    //Fetchs at once
     const parallelDataFetch = await Promise.all([tokenData, walletData]);
 
-    //Processes the revelant token (i.e. hashes NFT used to mint) data for easy use
     const processedTokenData = processTokenAPIData(parallelDataFetch[0]);
-    //Processes the revelant owner data for easy use
     const processedWalletData = processWalletAPIData(parallelDataFetch[1]);
 
-    //Returns NFT data in Opensea format
     res.status(200).json({
       name: `${collectionJSONData.name} #${tokenId}`,
       description: `${collectionJSONData.description}`,
+      image: '',
       animation_url: `https://sigils.com/media/${address}.html?hash==0x123&attributeB=3`, 
       attributes: [
         {
@@ -260,4 +228,7 @@ export default async function handler(req: any, res: any) {
         }
       ],
     });
+  } catch (error) {
+    console.error(`error fetching metadata: ${error}`);
   }
+}
