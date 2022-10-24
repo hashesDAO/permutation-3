@@ -677,7 +677,8 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   svgHTML = svgHTML.concat(`</svg>`);
   
-  return Buffer.from(svgHTML).toString('base64');
+  //return Buffer.from(svgHTML).toString('base64');
+  return svgHTML;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse< ResponseMetadata | string>) {
@@ -732,7 +733,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     res.status(200).json({
       name: `Sigil-V0: #${tokenId}`,
       description: 'TODO',
-      image_data: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      //image_data: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      image_data: `${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
       attributes: [
           {
             trait_type: 'Font',
