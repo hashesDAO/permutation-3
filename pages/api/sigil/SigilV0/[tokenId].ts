@@ -53,7 +53,7 @@ type FontData = {
 type ResponseMetadata = {
   name: string
   description: string
-  image: string
+  image_data: string
   attributes: attribute[]
 };
 
@@ -732,7 +732,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     res.status(200).json({
       name: `Sigil-V0: #${tokenId}`,
       description: 'TODO',
-      image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      image_data: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
       attributes: [
           {
             trait_type: 'Font',
