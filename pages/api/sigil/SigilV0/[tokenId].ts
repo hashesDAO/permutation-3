@@ -627,7 +627,7 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   var svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 ${xdimension} ${ydimension}">`;
 
-  svgHTML = svgHTML.concat(`<defs><style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesk|Righteous|Archivo+Black|Taviraj|Gruppo|Linden+Hill');</style></defs>`);
+  svgHTML = svgHTML.concat(`<style type="text/css">@import url('https://fonts.googleapis.com/css?family=Ropa+Sans|Courier+Prime|Oswald|Poppins|Roboto+Condensed|Montserrat|Bebas+Neue|Prompt|Space+Grotesk|Righteous|Archivo+Black|Taviraj|Gruppo|Linden+Hill');</style>`);
 
   svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: ${font.font}; font-size: ${font.fontsize[0]}px; text-anchor: middle }</style>`);
 
