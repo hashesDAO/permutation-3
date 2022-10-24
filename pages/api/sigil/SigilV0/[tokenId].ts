@@ -64,7 +64,7 @@ type attribute= {
 
 async function getTokenAPIData(tokenId: number) {
   try {
-    const apiData = await fetch(`http://permutation-3.vercel.app/api/tokenId/${tokenId}`);
+    const apiData = await fetch(`https://permutation-3-mv393woeb-hashesdao.vercel.app/api/tokenId/${tokenId}`);
 
     return await apiData.json();
   } catch (error) {
@@ -81,7 +81,7 @@ function processTokenAPIData(data: TokenResponseData): ProcessedTokenData {
 
 async function getWalletAPIData(address: string) {
   try {
-    const APIdata = await fetch(`http://permutation-3.vercel.app/api/wallet/hashes/${address}`);
+    const APIdata = await fetch(`https://permutation-3-mv393woeb-hashesdao.vercel.app/api/wallet/hashes/${address}`);
     const response = await APIdata.json();
     return response;
   } catch (error) {
