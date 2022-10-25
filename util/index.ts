@@ -24,12 +24,12 @@ export const INFURA_PREFIXES: { [key: number]: string } = {
   4: 'rinkeby',
 };
 
-export const HASHES_ADDRESS = {
+export const HASHES_ADDRESS: {[key: number]: string} = {
   [ChainId.MAINNET]: '0xD07e72b00431af84AD438CA995Fd9a7F0207542d',
   [ChainId.RINKEBY]: '0x25ca4f68d0f8271b0796406101ad6430a149af17',
 };
 
-export const HASHESDAO_ADDRESS = {
+export const HASHESDAO_ADDRESS: {[key: number]: string} = {
   [ChainId.MAINNET]: '0xbD3Af18e0b7ebB30d49B253Ab00788b92604552C',
   [ChainId.KOVAN]: '0xb2c0ADD2C81732A5D6609d122340fBafF99D7cC1',
 };

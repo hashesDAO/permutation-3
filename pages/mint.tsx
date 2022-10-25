@@ -9,6 +9,8 @@ import {
  } from '../util';
 import { getHashBase64EncodedSVG } from '../util/hash_attributes';
 import Addresses from '../addresses.json';
+import ConnectNotice from '../components/ConnectNotice';
+import { Box } from '@chakra-ui/react';
 
 interface HashWithMetadata {
   hashBase64EncodedSVG: string;
@@ -32,7 +34,7 @@ export default function Mint() {
 
   useEffect(() => {
     if (!collectionContract && chain) setCollectionContract(getHashesCollectionContract(Addresses.sigilV0CollectionAddress, chain.id));
-  }, [collectionContract, setCollectionContract]);
+  }, [collectionContract, chain, setCollectionContract]);
 
   useEffect(() => {
     if (address && hashesContract && collectionContract && chain) (async () => {
@@ -100,7 +102,7 @@ export default function Mint() {
         console.error(`error getting user's hash metadata: ${error}`);
       }
     })();
-  }, [address, hashesContract]);
+  }, [address, chain, collectionContract, hashesContract]);
 
   // if (!isConnected) return <div>Connect your wallet</div>;
 
