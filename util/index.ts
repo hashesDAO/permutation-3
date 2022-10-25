@@ -54,23 +54,20 @@ export function getEligibilityPredicateContract(address: string, chainId: number
   return hashesCollectionContract;
 }
 
-export function getHashesContract(chain_id: number | undefined): ethers.Contract {
-  const chainId = 1; //temp
+export function getHashesContract(chainId: number = 1): ethers.Contract {
   const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const newContract =  new ethers.Contract(HASHES_ADDRESS[chainId], HASHES_ABI.abi, provider);
   return newContract;
 }
 
-export function getHashesDAOContract(): ethers.Contract {
-  const chainId = 1; //temp
+export function getHashesDAOContract(chainId: number = 1): ethers.Contract {
   const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const newContract =  new ethers.Contract(HASHESDAO_ADDRESS[chainId], HASHES_DAO_ABI.abi, provider);
   return newContract;
 }
 
-export function getHashesCollectionContract(address: string): ethers.Contract {
-  const chainId = 1; //temp
-  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[1]);
+export function getHashesCollectionContract(address: string, chainId: number = 1): ethers.Contract {
+  const provider = new ethers.providers.InfuraProvider(INFURA_PREFIXES[chainId]);
   const hashesCollectionContract = CollectionNFTCloneableV1__factory.connect(
     address,
     provider

@@ -31,7 +31,7 @@ export default function Mint() {
   }, [isConnected, hashesContract, setHashesContract]);
 
   useEffect(() => {
-    if (!collectionContract) setCollectionContract(getHashesCollectionContract(Addresses.sigilV0CollectionAddress));
+    if (!collectionContract && chain) setCollectionContract(getHashesCollectionContract(Addresses.sigilV0CollectionAddress, chain.id));
   }, [collectionContract, setCollectionContract]);
 
   useEffect(() => {
