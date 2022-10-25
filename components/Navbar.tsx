@@ -1,4 +1,5 @@
-import { Button, Container, Flex, HStack, Link } from '@chakra-ui/react'
+import { Container, Flex, HStack, Link } from '@chakra-ui/react'
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Navbar() {
   return (
@@ -15,8 +16,7 @@ export default function Navbar() {
           <Link href='/mint'>Mint</Link>
           <Link href='/docs'>API Docs</Link>
         </HStack>
-
-        <Button colorScheme="blue">Connect Wallet</Button>
+        <ConnectButton/>
       </Flex>
     </Container>
   )
