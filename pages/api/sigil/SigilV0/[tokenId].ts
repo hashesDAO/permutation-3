@@ -53,7 +53,7 @@ type FontData = {
 type ResponseMetadata = {
   name: string
   description: string
-  image_data: string
+  animation_url: string
   attributes: attribute[]
 };
 
@@ -621,7 +621,7 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   const font = getFont(seed, processedWalletData.votes, processedWalletData.proposals, isConnected);
 
-  const HashesID = `Hashes ID: ${hashesTokenId}`;
+  const HashesID = `Hashes Id: ${hashesTokenId}`;
 
   const Phrase = getPhrase(processedTokenData.phrase_value);
 
@@ -733,8 +733,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     res.status(200).json({
       name: `Sigil-V0: #${tokenId}`,
       description: 'TODO',
-      //image_data: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
-      image_data: `${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      //image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
+      animation_url: `${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
       attributes: [
           {
             trait_type: 'Font',
