@@ -1,32 +1,31 @@
+import { Box, Container } from '@chakra-ui/react';
 import { BigNumber, ethers } from 'ethers';
 import { useAccount, useNetwork } from 'wagmi';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   getMintFeePredicateContract,
   getEligibilityPredicateContract,
   getHashesContract,
   getHashesCollectionContract,
  } from '../util';
+ import { CollectionNFTCloneableV1 } from '../util/types/src';
 import { getHashBase64EncodedSVG } from '../util/hash_attributes';
+import { HashWithMetadata } from '../util/types';
 import Addresses from '../addresses.json';
 import ConnectNotice from '../components/ConnectNotice';
-import { Box } from '@chakra-ui/react';
-
-interface HashWithMetadata {
-  hashBase64EncodedSVG: string;
-  tokenId: BigNumber;
-  hash: string;
-  mintFee: BigNumber;
-  isEligible: boolean;
-  hasAlreadyBeenUsedToMint: boolean;
-}
+import EligibleHashesMintingContainer from '../components/EligibleHashesMintingContainer';
 
 export default function Mint() {
   const { chain } = useNetwork();
   const { isConnected, address } = useAccount();
   const [ hashesContract, setHashesContract ] = useState<ethers.Contract>();
-  const [ collectionContract, setCollectionContract ] = useState<ethers.Contract>();
+  const [ collectionContract, setCollectionContract ] = useState<CollectionNFTCloneableV1>();
   const [ hashes, setHashes ] = useState<Array<HashWithMetadata>>();
+  const [ sigilCollectionMetadata, setSigilCollectionMetadata ] = useState<any>();
+  const [collectionTokenMintedNonce, setCollectionTokenMintedNonce] = useState(0);
+  const collectionTokenMintedCallback = useCallback(() => {
+      setCollectionTokenMintedNonce((s) => s + 1);
+  }, []); //TODO: do I need this?
 
   useEffect(() => {
     if (isConnected && !hashesContract) setHashesContract(getHashesContract(1));
@@ -104,12 +103,56 @@ export default function Mint() {
     })();
   }, [address, chain, collectionContract, hashesContract]);
 
-  // if (!isConnected) return <div>Connect your wallet</div>;
+  useEffect(() => {
+    if (collectionContract) {
+        (async () => {
+          try {
+            const [name, symbol, nonce, cap] = await Promise.all([
+                collectionContract.name(),
+                collectionContract.symbol(),
+                collectionContract.nonce(),
+                collectionContract.cap(),
+            ]);
+
+            setSigilCollectionMetadata({
+                name,
+                symbol,
+                currentNumberMinted: nonce,
+                supplyCap: cap,
+            });
+          } catch (error) {
+            console.error(`error getting sigil collection metadata: ${error}`);
+          }
+        })();
+    }
+}, [collectionContract, collectionTokenMintedNonce, setSigilCollectionMetadata]); // collectionTokenMintedNonce - do we need this?
+
+  if (!isConnected) {
+    return (
+      <Box p={8}>
+        <ConnectNotice />
+      </Box>
+    );
+  }
 
   return (
     <>
-        <h1>mint</h1>
-        {JSON.stringify(hashes)}
+        {/* {JSON.stringify(hashes)} */}
+        <Container maxW="container.xl" centerContent mt={12}>
+
+        <Box mb={12}>
+        <EligibleHashesMintingContainer
+          hashes={hashes}
+          collectionContract={collectionContract}
+          tokenMintedCallback={collectionTokenMintedCallback}
+          isSupplyCapReached={
+            sigilCollectionMetadata &&
+            sigilCollectionMetadata.supplyCap.toNumber() !== 0 &&
+            sigilCollectionMetadata.currentNumberMinted.gte(sigilCollectionMetadata.supplyCap)
+          }
+          />
+        </Box>
+        </Container>
     </>
   )
 }
