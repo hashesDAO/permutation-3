@@ -25,6 +25,7 @@ type WalletHash = {
 type ResponseData = {
   hashes: WalletHash[]
   on_chain_votes: number
+  proposals_created: number
   owns_perm_2_nft: boolean
 };
 
@@ -62,31 +63,38 @@ export default async function handler(
     const currentBlockNumber = await etherscanProvider.getBlockNumber();
 
     const hashes: WalletHash[] = [];
+
+    const generatedFilter = hashesContract.filters.Generated();
+    const allGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
+
+    const tokenIdPromises = Array.from(Array(hashesCount), (_, i) => i).map(i => hashesContract.tokenOfOwnerByIndex(address, i));
+    const tokenIds = await Promise.all(tokenIdPromises);
+    const hashPromises = tokenIds.map(tokenId => hashesContract.getHash(tokenId));
+    const deactivatedPromises = tokenIds.map(tokenId => hashesContract.deactivated(tokenId));
+    const tokenDetailPromises = await Promise.all([...hashPromises, ...deactivatedPromises]);
+
     for (let i = 0; i < hashesCount; i++) {
-      const tokenId = await hashesContract.tokenOfOwnerByIndex(address, i);
-      const [hash, isDeactivated]: [string, boolean] = await Promise.all([
-        hashesContract.getHash(tokenId),
-        hashesContract.deactivated(tokenId),
-      ]);
 
-      const generatedFilter = hashesContract.filters.Generated();
-      const allGeneratedEvents = await hashesContract.queryFilter(generatedFilter);
-      const tokenIdEvent = allGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
+    const tokenId = tokenIds[i];
+    const hash = tokenDetailPromises[i]._hex;
+    const isDeactivated = tokenDetailPromises[i]._isBigNumber;
 
-      const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
-      const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
-      const type = getHashType(tokenId, isDeactivated);
+    const tokenIdEvent = allGeneratedEvents.find(event => Number(event?.args?.tokenId) === Number(tokenId));
 
-      hashes.push({
-        hash_value: hash,
-        type,
-        minted_by_address: artist === address,
-        blocks_held: blocksHeld,
-        purchased_above_mint_price: false,
-        token_id: tokenId.toNumber(),
-      });
-    };
+    const artist = tokenIdEvent?.args?.artist ? tokenIdEvent?.args?.artist : null;
+    const blocksHeld = tokenIdEvent?.blockNumber ? currentBlockNumber - tokenIdEvent?.blockNumber : 0;
+    const type = getHashType(tokenId, isDeactivated);
 
+    hashes.push({
+      hash_value: hash,
+      type,
+      minted_by_address: artist === address,
+      blocks_held: blocksHeld,
+      purchased_above_mint_price: false,
+      token_id: tokenId.toNumber(),
+    });
+    }
+    
     const hashesNotMinted = hashes
       .filter(hash => hash.minted_by_address === false)
       .map(hash => hash.token_id);
@@ -120,13 +128,23 @@ export default async function handler(
 
     let votesCastByAddress = 0;
 
+    let proposalsCreatedByAddress = 0;
+
     if (hasNonStandardHash) {
+
       const hashesDAOContract = getHashesDAOContract();
       const voteCastFilter = hashesDAOContract.filters.VoteCast();
       const allVoteCastEvents = await hashesDAOContract.queryFilter(voteCastFilter);
 
       votesCastByAddress = allVoteCastEvents
         .filter(event => event?.args?.voter.toLowerCase() === address.toLowerCase())
+        .length;
+
+      const proposalCreatedFilter = hashesDAOContract.filters.ProposalCreated();
+      const allVotesProposedEvents = await hashesDAOContract.queryFilter(proposalCreatedFilter);
+
+      proposalsCreatedByAddress = allVotesProposedEvents
+        .filter(event => event?.args?.proposer.toLowerCase() === address.toLowerCase())
         .length;
     }
 
@@ -142,6 +160,7 @@ export default async function handler(
     res.status(200).json({
       hashes,
       on_chain_votes: votesCastByAddress,
+      proposals_created: proposalsCreatedByAddress,
       owns_perm_2_nft: medleyNftCount > 0,
     });
   } catch (error) {
