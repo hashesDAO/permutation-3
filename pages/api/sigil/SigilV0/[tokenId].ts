@@ -93,7 +93,7 @@ function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
   const tyler = {name: "Tyler", colours: ["#d12a2f", "#315f8c", "#3b2b20", "#b8d9ce", "#ebe4d8"]} as ColourPalette;
   const sol = {name: "Sol", colours: ["#332f2a", "#e40643", "#ffce04", "#0167a4", "#f0efe7"]} as ColourPalette;
   const x = {name: "X", colours: ["#050615", "#9ae8af", "#7138ca", "#f34ca2", "#3a1e6d"]} as ColourPalette;
-  const rhea = {name: "Rhea", colours: ["#012041", "#6001c0", "#4060c1", "#a1e101", "#e0a17f"]} as ColourPalette;
+  const rhea = {name: "Rhea", colours: ["#df9f25", "#1cbe20", "#4163bc", "#bd2243", "#829f81"]} as ColourPalette;
   const OP6334 = {name: "Open palette 6334", colours: ["#339911", "#ddbbbb", "#0044ff", "#ddee11", "#ddffff"]} as ColourPalette;
   const VPJ = {name: "Vitalik's pyjamas", colours: ["#ff534d", "#9d0107", "#a54100", "#ffc8ae", "#bfa7a1"]} as ColourPalette;
   const kevin = {name: "Kevin", colours: ["#000000", "#ff0020", "#ffffff", "#0208fa", "#05e600"]} as ColourPalette;
@@ -101,54 +101,69 @@ function getColourPalette(seed: number, isConnected: boolean): ColourPalette {
   const casey = {name: "Casey", colours: ["#333d47", "#0671a5", "#ad3a15", "#d3cfc3", "#ece8dc"]} as ColourPalette;
   const loren = {name: "Loren", colours: ["#202421", "#26686b", "#f0f435", "#ea212d", "#dde1de"]} as ColourPalette;
   const punk = {name: "Punk #5822", colours: ["#000000", "#75bdbd", "#c8fbfb", "#8e6fb6", "#1637a4"]} as ColourPalette;
+  const number5 = {name: "Number 5", colours: ["#000000", "#14213d", "#fca311", "#e5e5e5", "#ffffff"]} as ColourPalette;
+  const discord = {name: "Discord", colours: ["#738bd7", "#ffffff", "#9aaab4", "#2c2f33", "#23272a"]} as ColourPalette;
+  const squiggle = {name: "Squiggle", colours: ["#00ff14", "#002fff", "#f300ff", "#ff0004", "#fffc00"]} as ColourPalette;
 
   //handling rarities
   const randomNumber = seed % 100;
 
   //Runs through each of the protential colour palettes given their probabilities
-  //Tyler: 11%
-  if (randomNumber <= 10) {
+  //Tyler: 10%
+  if (randomNumber <= 9) {
     return tyler;
   }
-  //Sol: 11%
-  if ((randomNumber > 10) && (randomNumber <= 21)) {
+  //Sol: 10%
+  if ((randomNumber > 9) && (randomNumber <= 19)) {
     return sol;
   }
-  //Xcopy: 9%
-  if ((randomNumber > 21) && (randomNumber <= 30)) {
-    return x;
-  }
-  //Rhea: 7%
-  if ((randomNumber > 30) && (randomNumber <= 37)) {
-    return rhea;
-  }
-  //OP6334: 5%
-  if ((randomNumber > 37) && (randomNumber <= 42)) {
-    return OP6334;
-  }
-  //Vitalik's PJs: 3%
-  if ((randomNumber > 42) && (randomNumber <= 45)) {
-    return VPJ;
-  }
-  //Kevin: 11%
-  if ((randomNumber > 45) && (randomNumber <= 56)) {
+  //Kevin: 10%
+  if ((randomNumber > 19) && (randomNumber <= 29)) {
     return kevin;
   }
-  //Herbert: 11%
-  if ((randomNumber > 56) && (randomNumber <= 67)) {
+  //Xcopy: 10%
+  if ((randomNumber > 29) && (randomNumber <= 39)) {
+    return x;
+  }
+  //Herbert: 10%
+  if ((randomNumber > 39) && (randomNumber <= 49)) {
     return herbert;
   }
-  //Casey: 11%
-  if ((randomNumber > 67) && (randomNumber <= 78)) {
-    return casey;
-  }
-  //Loren: 11%
-  if ((randomNumber > 78) && (randomNumber <= 89)) {
+  //Loren: 10%
+  if ((randomNumber > 49) && (randomNumber <= 59)) {
     return loren;
   }
   //Punk: 10%
-  else {
+  if ((randomNumber > 59) && (randomNumber <= 69)) {
     return punk;
+  }
+  //Casey: 10%
+  if ((randomNumber > 69) && (randomNumber <= 79)) {
+    return casey;
+  }
+  //OP6334: 5%
+  if ((randomNumber > 79) && (randomNumber <= 84)) {
+    return OP6334;
+  }
+  //Vitalik's PJs: 1%
+  if ((randomNumber == 85)) {
+    return VPJ;
+  }
+  //Rhea: 3%
+  if ((randomNumber > 85) && (randomNumber <= 88)) {
+    return rhea;
+  }
+  //Number5: 5%
+  if ((randomNumber > 88) && (randomNumber <= 93)) {
+    return number5;
+  }
+  //Discord: 5%
+  if ((randomNumber > 93) && (randomNumber <= 98)) {
+    return discord;
+  }
+  //Squiggle: 1%
+  else {
+    return squiggle;
   }
 }
 
@@ -1671,8 +1686,6 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   let font = getFont(seed);
 
-  const HashesID = `Hashes ID: ${hashesTokenId}`;
-
   const Phrase = getPhrase(processedTokenData.phrase_value);
 
   var svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 ${xdimension} ${ydimension}">`;
@@ -1745,11 +1758,7 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
     }
   }
 
-  svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 4 * (ydimension/36)}" font-weight="bold" class="support0">${HashesID}</text>`);
-
   svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 3 * (ydimension/36)}" class="support1">${Phrase}</text>`);
-
-  svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${ydimension - 2 * (ydimension/36)}" class="support1">${processedTokenData.hash}</text>`);
 
   svgHTML = svgHTML.concat(`</svg>`);
   
@@ -1845,7 +1854,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const mintingHashType = getMintingHashesType(hashesTokenId);
 
     res.status(200).json({
-      name: `Sigil-V0: #${tokenId}`,
+      name: `Sigil Genesis: #${tokenId}`,
       description: "This is the original Sigils collection from the Hashes DAO. Each SigilVO is a dynamic NFT that reacts to on-chain activity. Each Sigil is minted with a Hashes NFT and it acts as a form of reputation, reflecting a holder's Hashes ecosystem activity.",
       image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
       attributes: [
