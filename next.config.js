@@ -7,6 +7,7 @@ const withTM = require('next-transpile-modules')([
 
 const nextConfig = {
   reactStrictMode: true,
+  cors: false,
 }
 
 module.exports = withTM(nextConfig);
