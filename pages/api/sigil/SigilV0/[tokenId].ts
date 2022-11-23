@@ -1765,6 +1765,8 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse< ResponseMetadata | string>) {
 
+  res.setHeader('Access-Control-Allow-Origin', '*')
+
   const { tokenId } = req.query;
 
   if (isNaN(Number(tokenId))) {
