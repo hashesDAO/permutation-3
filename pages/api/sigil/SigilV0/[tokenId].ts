@@ -1767,6 +1767,8 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse< ResponseMetadata | string>) {
 
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
   const { tokenId } = req.query;
 
   if (isNaN(Number(tokenId))) {
@@ -1855,7 +1857,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     res.status(200).json({
       name: `Sigil Genesis: #${tokenId}`,
-      description: "This is the original Sigils collection from the Hashes DAO. Each SigilVO is a dynamic NFT that reacts to on-chain activity. Each Sigil is minted with a Hashes NFT and it acts as a form of reputation, reflecting a holder's Hashes ecosystem activity.",
+      description: "This is the original Sigils collection from the Hashes DAO. Each Sigil is a dynamic NFT that reacts to on-chain activity. Furthermore, each Sigil is minted with a Hashes NFT and it acts as a form of reputation, reflecting a holder's Hashes ecosystem activity.",
       image: `data:image/svg+xml;base64,${getSigilBase64EncodedSVG(hashesTokenId, isSigilConnected, seed, processedTokenData, processedWalletData)}`,
       attributes: [
           {
