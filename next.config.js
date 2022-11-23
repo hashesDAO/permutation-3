@@ -7,7 +7,14 @@ const withTM = require('next-transpile-modules')([
 
 const nextConfig = {
   reactStrictMode: true,
-  cors: false,
+  async headers() {
+    return [{
+      source: "/api/sigil/:path",
+      headers: [
+        { key: "Access-Control-Allow-Origin", value: "*" },
+      ]
+    }]
+  },
 }
 
 module.exports = withTM(nextConfig);
