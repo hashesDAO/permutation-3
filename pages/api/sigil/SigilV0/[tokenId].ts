@@ -1690,7 +1690,7 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
   var svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 ${xdimension} ${ydimension}">`;
 
-  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 80px; text-anchor: middle }</style>`);
+  svgHTML = svgHTML.concat(`<style>.main0 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 50px; text-anchor: middle }</style>`);
 
   svgHTML = svgHTML.concat(`<style>.main1 { fill: ${colourPalette.colours[coloursUsed[1]]}; font-family: courier; font-size: 20px; text-anchor: middle }</style>`);
 
@@ -1706,18 +1706,18 @@ function getSigilBase64EncodedSVG(hashesTokenId: number, isConnected: boolean, s
 
     if (largePoundStrings.length == 1) {
 
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5}" class="main0">${largePoundStrings[0]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5}" letter-spacing="2" class="main0">${largePoundStrings[0]}</text>`);
     }
     if (largePoundStrings.length == 2) {
 
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/12}" class="main0">${largePoundStrings[0]}</text>`);
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/12}" class="main0">${largePoundStrings[1]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5 - ydimension/12}" letter-spacing="2" class="main0">${largePoundStrings[0]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5 + ydimension/12}" letter-spacing="2" class="main0">${largePoundStrings[1]}</text>`);
     }
     if (largePoundStrings.length == 3) {
 
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 - ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[0]}</text>`);
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/36}" class="main0">${largePoundStrings[1]}</text>`);
-      svgHTML = svgHTML.concat(`<text x="${xdimension/2}" y="${2 * ydimension/5 + ydimension/6 + ydimension/36}" class="main0">${largePoundStrings[2]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5 - ydimension/6 + ydimension/36}" letter-spacing="2" class="main0">${largePoundStrings[0]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5 + ydimension/36}" letter-spacing="2" class="main0">${largePoundStrings[1]}</text>`);
+      svgHTML = svgHTML.concat(`<text x="${xdimension/2 + 1}" y="${2 * ydimension/5 + ydimension/6 + ydimension/36}" letter-spacing="2" class="main0">${largePoundStrings[2]}</text>`);
     }
   } else {
 
@@ -1873,11 +1873,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
             value: mintingHashType,
           },
           {
-            trait_type: 'Snapshot Votes',
+            trait_type: 'Governance Votes',
             value: processedWalletData.votes,
           },
           {
-            trait_type: 'Snapshot Proposals',
+            trait_type: 'Governance Proposals',
             value: processedWalletData.proposals,
           },
       ],
